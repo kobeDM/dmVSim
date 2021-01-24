@@ -11,7 +11,7 @@ ROOTLIBS = $(shell root-config --libs)
 
 RLIB = -I${INCLUDE} -I./ShUtil -I${ROOTSYS}/include
 
-TARGET = LNATrand CRDMrand CRDMFLXrand
+TARGET = LNATrand CRDMrand CRDMFLXrand CRDMAccRand
 
 all:	${TARGET}
 
@@ -26,6 +26,10 @@ CRDMrand: ${SRC}/CRDMrand.cc
 CRDMFLXrand: ${SRC}/CRDMFLXrand.cc
 	g++ ${RLIB} $^ -o CRDMFLXrand ${CXXFLAGS} ${ROOTLIBS} -I./ShUtil
 	mv ./CRDMFLXrand ${LD_PATH}
+
+CRDMAccRand: ${SRC}/CRDMAccRand.cc
+	g++ ${RLIB} $^ -o CRDMAccRand ${CXXFLAGS} ${ROOTLIBS} -I./ShUtil
+	mv ./CRDMAccRand ${LD_PATH}
 
 clean:
 	rm -f *.o
