@@ -17,53 +17,59 @@ const double PC2CM        = 3.086*1e21; // kpc->cm
 
 const double V_LIGHT      = 299792.458; // km/s
 
-const String CR_P_INPUT   = "/home/higashino/work/repo/dmvsim/rand/data/GALPROP_p.txt";
+const String CR_P_INPUT   = "./data/GALPROP_p.txt";
 
 std::vector< double > gEneAray;
 std::vector< double > gFlxAray;
 
-double getDMFlux( );
+double getDMFlux       ( );
 
-double getTMax( double pE,
-                double pM,
-                double dmM );
+double getTMax         ( double pE,
+                         double pM,
+                         double dmM );
 
-double getTMaxInv( double pE,
-                   double pM,
-                   double dmM );
+double getTMaxInv      ( double pE,
+                         double pM,
+                         double dmM );
 
-double getTMin( double pM,
-                double dmE,
-                double dmM );
+double getTMin         ( double pM,
+                         double dmE,
+                         double dmM );
 
-double getTIntegral( double pM,
-                     double dmE,
-                     double dmM );
+double getTIntegral    ( double pM,
+                         double dmE,
+                         double dmM );
 
-double getDMFlux( double theta,
-                  double phi,
-                  double los,
-                  double pM,
-                  double dmE,
-                  double dmM,
-                  double dmXS,
-                  double dmDScale,
-                  double dmRScale,
-                  double sunDist,
-                  double lambdaP );
+double getDMFlux       ( double theta,
+                         double phi,
+                         double los,
+                         double pM,
+                         double dmE,
+                         double dmM,
+                         double dmXS,
+                         double dmDScale,
+                         double dmRScale,
+                         double sunDist,
+                         double lambdaP );
 
-double getDMFlux( double* x,
-                  double* par );
+double getDMFlux       ( double* x,
+                         double* par );
 
-double getDMFluxV( double* x,
-                   double* par );
+double getDMFluxV      ( double* x,
+                         double* par );
 
-void printProgressBar( const int& index, const int& total );
+void   printProgressBar( const int& index, const int& total );
 
-bool readGalprop( const String& input );
+bool   readGalprop     ( const String& input );
 
-double getDiffFlux( const double& energy );
+double getDiffFlux     ( const double& energy );
 
+
+//////////////////////////////////////////////////////////////////
+//
+// main
+//
+//////////////////////////////////////////////////////////////////
 int main( int argc, char** argv )
 {
     if( argc != 5 ) {
@@ -83,21 +89,19 @@ int main( int argc, char** argv )
         abort( );
     }
     
+    double xsection = PC2CM*PC2CM*1e-30;
     double rhoScaleKPC = DM_RHO_SCALE / ( PC2CM*PC2CM*PC2CM ); // converted to [GeV / kpc^3]
 
     TF3 func( "flux", getDMFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
     func.SetParameter( 0, PROTON_MASS       );
     func.SetParameter( 1, los               );
     func.SetParameter( 2, dmM               );
-    func.SetParameter( 3, PC2CM*PC2CM*1e-30 ); // assume sigma_DM = 10^-30 [1/cm^2]
+    func.SetParameter( 3, xsection          ); // assume sigma_DM = 10^-30 [1/cm^2]
     func.SetParameter( 4, rhoScaleKPC       );
     func.SetParameter( 5, DM_R_SCALE        );
     func.SetParameter( 6, SUN_DISTANCE      );
     func.SetParameter( 7, LAMBDA_P          );
-
-  
     double totValue = PC2CM*PC2CM*func.Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT );
-    DEBUG(totValue);
 
     func.SetNpx(100);
     func.SetNpy(100);
@@ -108,12 +112,26 @@ int main( int argc, char** argv )
     TFile file( fileName.c_str( ), "RECREATE" );
     TTree* pTree = new TTree( "tree", "tree" );
     double theta = 0.0, phi = 0.0, velocity = 0.0;
-    double vLight = V_LIGHT;
-    pTree->Branch( "theta",     &theta    );
-    pTree->Branch( "phi",       &phi      );
-    pTree->Branch( "velocity",  &velocity );
-    pTree->Branch( "invWeight", &totValue );
-    pTree->Branch( "vLight",    &vLight   );
+    double vLight      = V_LIGHT;
+    double pM          = PROTON_MASS;
+    double rScaleKPC   = DM_R_SCALE;
+    double sunDistance = SUN_DISTANCE;
+    double lambdaP     = LAMBDA_P;
+    pTree->Branch( "theta",       &theta       );
+    pTree->Branch( "phi",         &phi         );
+    pTree->Branch( "velocity",    &velocity    );
+    pTree->Branch( "invWeight",   &totValue    );
+    pTree->Branch( "vLight",      &vLight      );
+
+    pTree->Branch( "dmM",         &dmM         );
+    pTree->Branch( "los",         &los         );
+
+    pTree->Branch( "pM",          &pM          );
+    pTree->Branch( "xsection",    &xsection    );
+    pTree->Branch( "rhoScaleKPC", &rhoScaleKPC );
+    pTree->Branch( "rScaleKPC",   &rScaleKPC   );
+    pTree->Branch( "sunDistance", &sunDistance );
+    pTree->Branch( "lambdaP",     &lambdaP     );
     
     for( int i = 0; i < evtNum; ++i ) {
         printProgressBar( i, evtNum );
@@ -127,6 +145,11 @@ int main( int argc, char** argv )
 }
 
 
+//////////////////////////////////////////////////////////////////
+//
+// sub functions
+//
+//////////////////////////////////////////////////////////////////
 double getTMax( double pE,
                 double pM,
                 double dmM )
@@ -143,7 +166,6 @@ double getTMaxInv( double pE,
                    double dmM )
 {
     if( pE < 0.0 || pM < 0.0 || dmM < 0.0 ) return -100.0;
-    // return 1.0 / getTMax( pE, pM, dmM );
     return getDiffFlux( pE ) / getTMax( pE, pM, dmM );
 }
 
@@ -267,7 +289,8 @@ double getDMFluxV( double* x,
 
     double flux = getDMFlux( theta, phi, los, pM, dmE, dmM, dmXS, dmDScale, dmRScale, sunDist, lambdaP );
 
-    return velo*velo*flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
+    // return velo * velo * flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
+    return flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
 }
 
 
@@ -312,9 +335,6 @@ bool readGalprop( const String& input )
         gFlxAray.push_back( flux / energy / energy );
     }
 
-    // DEBUG(gEneAray.size( ));
-    // DEBUG(gFlxAray.size( ));
-    
     return true;
 }
 

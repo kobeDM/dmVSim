@@ -5,14 +5,308 @@
 #include "Math/IntegratorOptions.h"
 
 const double V_LIGHT = 299792.458; //km/s
-// const double PI = TMath::Pi( );
 
+double   randomPM         ( );
+double   sq               ( const double& x );
+double   gamFact          ( const double& velo );
+
+double   getSinDmScatPhi  ( );
+
+double   getDmCosScatTheta( const double& dmM,
+                            const double& nuM,
+                            const double& cosScatAngleCom );
+
+double   getNuCosScatTheta( const double& cosScatThetaCom );
+
+TVector3 getDmVVec        ( const double& velocity,
+                            const double& theta,
+                            const double& phi );
+
+double   getDmVExp        ( const double& dmInitVCom,
+                            const double& dmFinVCom,
+                            const double& cosScatThetaCom,
+                            const double& cosScatThetaTmpExp );
+
+double   getNuFinVExp     ( const double& dmInitVExp,
+                            const double& dmFinVExp,
+                            const double& dmM,
+                            const double& nuM );
+
+double   getRecoilEnergy  ( const double& nuM,
+                            const double& nuVExp );
+
+double   getRotAngleAlpha ( TVector3      dmInitVExpVec );
+
+double   getRotAngleBeta  ( TVector3      dmInitVExpVec );
+
+TVector3 rotation         ( TVector3      u,
+                            const double& al,
+                            const double& be );
+
+double   getFormFactorSq  ( const double& ER,
+                            const int&    atom );
+
+void     printProgressBar ( const int&    index,
+                            const int&    total );
+
+//////////////////////////////////////////////////////////////////
+//
+// main
+//
+//////////////////////////////////////////////////////////////////
+int main( int argc, char** argv )
+{
+    time_t t = time( nullptr );
+    printf("%s", ctime(&t));//time to start
+
+    // set TRandom3
+    if( gRandom != nullptr && gRandom->GetName( ) != "Random3" ) {
+        delete gRandom;
+        gRandom == nullptr;
+    }
+
+    if( gRandom == nullptr )
+        gRandom = new TRandom3( 0 );
+
+    std::cout << "Select randomizer: " << gRandom->GetName( ) << std::endl;
+
+    if( argc != 3 ) {
+        std::cerr << "INPUT ERROR" << std::endl;
+        std::cerr << "./CRDMAccRand [input filename] [output filename]" << std::endl;
+        abort( );
+    }
+    String input  = argv[1];
+    String output = argv[2];
+    
+    double sysRelativeV = 0.0;
+    double dmFinVCom  = 0.0;
+    double nuFinVCom  = 0.0;
+    double dmInitVExp = 0.0, dmInitVExpX = 0.0, dmInitVExpY = 0.0 , dmInitVExpZ = 0.0;
+    double dmFinVExp  = 0.0, dmFinVExpX  = 0.0, dmFinVExpY  = 0.0 , dmFinVExpZ  = 0.0;
+    double nuFinVExp  = 0.0, nuFinVExpX  = 0.0, nuFinVExpY  = 0.0 , nuFinVExpZ  = 0.0;
+
+    double nuFinVTmpExp  = 0.0, nuFinVTmpExpX  = 0.0, nuFinVTmpExpY  = 0.0 , nuFinVTmpExpZ  = 0.0;
+
+    double scatThetaCom    = 0.0;
+    double cosScatThetaCom = 0.0;
+
+    double dmScatThetaExp     = 0.0, nuScatThetaExp    = 0.0;
+    double dmScatPhiExp       = 0.0, nuScatPhiExp      = 0.0;
+    double dmSinScatThetaExp  = 0.0, nuSinScatThetaExp = 0.0;
+    double dmCosScatThetaExp  = 0.0, nuCosScatThetaExp = 0.0;
+    double dmSinScatPhiExp    = 0.0, nuSinScatPhiExp   = 0.0;
+    double dmCosScatPhiExp    = 0.0, nuCosScatPhiExp   = 0.0;
+
+    double dmScatThetaTmpExp     = 0.0, nuScatThetaTmpExp    = 0.0;
+    double dmScatPhiTmpExp       = 0.0, nuScatPhiTmpExp      = 0.0;
+    double dmSinScatThetaTmpExp  = 0.0, nuSinScatThetaTmpExp = 0.0;
+    double dmCosScatThetaTmpExp  = 0.0, nuCosScatThetaTmpExp = 0.0;
+    double dmSinScatPhiTmpExp    = 0.0, nuSinScatPhiTmpExp   = 0.0;
+    double dmCosScatPhiTmpExp    = 0.0, nuCosScatPhiTmpExp   = 0.0;
+
+    double nuRecoilE    = 0.0;
+    double formFactorSq = 0.0;
+
+    double alpha = 0.0, beta = 0.0;
+
+    TVector3 dmInitVExpVec;
+    TVector3 nuFinVTmpExpVec;
+    TVector3 dmFinVExpVec;
+    TVector3 nuFinVExpVec;
+
+    double rndm = 0.0;
+    
+    int group = 0;
+    double nuMList[15] = { };
+
+    //SI
+    nuMList[0]=0.932*(0.989*12.+0.011*13);//C
+    nuMList[1]=0.932*(0.950*32.+0.008*33.+0.042*34.);//S
+    nuMList[2]=0.932*(0.5069*79.+0.4931*81.);//Br
+    nuMList[3]=0.932*127.;//I
+    nuMList[11]=0.932*(0.5184*107.+0.48161*109.);//Ag
+    //SD
+    nuMList[10]=0.932*19.;//F
+
+    FILE* fp1 = fopen("data/dist_blue10GeV.dat", "wt");//output file
+    FILE* fp2 = fopen("data/output2_dist_blue10GeV.dat", "wt");//output file
+    int atom = 10;//here
+    printf("atom is %d (0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag)\n",atom);
+
+    double nuM = nuMList[ atom ];
+    double dmM = 10.;//DM mass
+    // printf("dmM=%5.1f #event=10^%2.0lf\n", dmM, log10f(snum));
+
+    // open input file
+    TFile inputFile( input.c_str( ) );
+    TTree* pInTree = dynamic_cast< TTree* >( inputFile.Get( "tree" ) );
+    if( pInTree == nullptr ) {
+        std::cerr << "Failed to read input file..." << std::endl;
+        abort( );
+    }
+
+    double velocity = 0.0, theta = 0.0, phi = 0.0;
+    pInTree->SetBranchAddress( "velocity", &velocity );
+    pInTree->SetBranchAddress( "theta",    &theta    );
+    pInTree->SetBranchAddress( "phi",      &phi      );
+    
+
+
+    // open output file
+    TFile outputFile( output.c_str( ), "RECREATE" );
+    TTree* pOutTree = new TTree( "tree", "tree" );
+    pOutTree->SetDirectory( &outputFile );
+    pOutTree->Branch( "dmM",              &dmM               );
+    pOutTree->Branch( "nuM",              &nuM               );
+    pOutTree->Branch( "atom",             &atom              );
+    pOutTree->Branch( "dmInjV_debug",     &velocity          );
+    pOutTree->Branch( "dmInjV",           &dmInitVExp        );
+    pOutTree->Branch( "dmInjVX",          &dmInitVExpX       );
+    pOutTree->Branch( "dmInjVY",          &dmInitVExpY       );
+    pOutTree->Branch( "dmInjVZ",          &dmInitVExpZ       );
+    pOutTree->Branch( "dmInjTheta",       &theta             );
+    pOutTree->Branch( "dmInjPhi",         &phi               );
+
+    pOutTree->Branch( "dmOutPhiTmpExp",   &dmScatPhiTmpExp   );
+    pOutTree->Branch( "dmOutThetaTmpExp", &dmScatThetaTmpExp );
+    pOutTree->Branch( "dmOutCosPhiTmpExp",   &dmCosScatPhiTmpExp   );
+    pOutTree->Branch( "dmOutCosThetaTmpExp", &dmCosScatThetaTmpExp );
+
+    pOutTree->Branch( "nuRecPhiTmpExp",   &nuScatPhiTmpExp   );
+    pOutTree->Branch( "nuRecThetaTmpExp", &nuScatThetaTmpExp );
+    pOutTree->Branch( "nuRecCosPhiTmpExp",   &nuCosScatPhiTmpExp   );
+    pOutTree->Branch( "nuRecCosThetaTmpExp", &nuCosScatThetaTmpExp );
+    pOutTree->Branch( "nuRecVTmpExpX",    &nuFinVTmpExpX  );
+    pOutTree->Branch( "nuRecVTmpExpY",    &nuFinVTmpExpY  );
+    pOutTree->Branch( "nuRecVTmpExpZ",    &nuFinVTmpExpZ  );
+
+    pOutTree->Branch( "dmOutV",           &dmFinVExp         );
+    pOutTree->Branch( "dmOutVX",          &dmFinVExpX        );
+    pOutTree->Branch( "dmOutVY",          &dmFinVExpY        );
+    pOutTree->Branch( "dmOutVZ",          &dmFinVExpZ        );
+    pOutTree->Branch( "dmOutTheta",       &dmScatThetaExp    );
+    pOutTree->Branch( "dmOutPhi",         &dmScatPhiExp      );
+    pOutTree->Branch( "dmOutCosTheta",    &dmCosScatThetaExp );
+    pOutTree->Branch( "dmOutSinPhi",      &dmSinScatPhiExp   );
+                                        
+    pOutTree->Branch( "nuRecTheta",       &nuScatThetaExp    );
+    pOutTree->Branch( "nuRecPhi",         &nuScatPhiExp      );
+    pOutTree->Branch( "nuRecCosTheta",    &nuCosScatThetaExp );
+    pOutTree->Branch( "nuRecSinPhi",      &nuSinScatPhiExp   );
+    pOutTree->Branch( "nuRecV",           &nuFinVExp         );
+    pOutTree->Branch( "nuRecVX",          &nuFinVExpX        );
+    pOutTree->Branch( "nuRecVY",          &nuFinVExpY        );
+    pOutTree->Branch( "nuRecVZ",          &nuFinVExpZ        );
+    pOutTree->Branch( "nuRecE",           &nuRecoilE         );
+                                        
+    pOutTree->Branch( "sysRelV",          &sysRelativeV      );
+
+    pOutTree->Branch( "scatThetaCom",     &scatThetaCom      );
+    pOutTree->Branch( "cosScatThetaCom",  &cosScatThetaCom   );
+                                                              
+    pOutTree->Branch( "alpha",            &alpha             );
+    pOutTree->Branch( "beta",             &beta              );
+    pOutTree->Branch( "formFactorSq",     &formFactorSq      );
+
+    pOutTree->Branch( "rndm",             &rndm              );
+
+    int totEvt = pInTree->GetEntries( );
+    for( int evt = 0; evt < totEvt; ++evt ) {
+        printProgressBar( evt, totEvt );
+        pInTree->GetEntry( evt );
+        
+        dmInitVExpVec = getDmVVec( velocity, theta, phi );
+        dmInitVExpX   = dmInitVExpVec.X( );
+        dmInitVExpY   = dmInitVExpVec.Y( );
+        dmInitVExpZ   = dmInitVExpVec.Z( );
+        dmInitVExp    = dmInitVExpVec.Mag( );
+        
+        sysRelativeV = dmM / (dmM + nuM) * dmInitVExp;
+        scatThetaCom = gRandom->Rndm( ) * 1.0 * PI;
+        cosScatThetaCom = cos( scatThetaCom );
+
+        dmCosScatThetaTmpExp = getDmCosScatTheta( dmM, nuM, cosScatThetaCom );
+        dmSinScatThetaTmpExp = sqrt( 1.0 - sq( dmCosScatThetaTmpExp ) );
+        nuCosScatThetaTmpExp = getNuCosScatTheta( cosScatThetaCom );
+        nuSinScatThetaTmpExp = sqrt( 1.0 - sq( nuCosScatThetaTmpExp ) );
+        dmScatThetaTmpExp    = asin( dmSinScatThetaTmpExp );
+        nuScatThetaTmpExp    = asin( nuSinScatThetaTmpExp );
+
+        dmSinScatPhiTmpExp = getSinDmScatPhi( );
+        dmCosScatPhiTmpExp = sqrt( 1.0 - sq( dmSinScatPhiTmpExp ) );
+        dmScatPhiTmpExp    = asin( dmSinScatPhiTmpExp );
+
+        nuSinScatPhiTmpExp = sin( PI - dmScatPhiTmpExp );
+        // nuSinScatPhiTmpExp = -dmSinScatPhiTmpExp;
+        nuCosScatPhiTmpExp = sqrt( 1.0 - sq( nuSinScatPhiTmpExp ) );
+        nuScatPhiTmpExp    = asin( nuSinScatPhiTmpExp );
+
+        dmFinVCom = nuM / ( dmM + nuM ) * dmInitVExp * gamFact( dmInitVExp );
+        dmFinVExp = getDmVExp( sysRelativeV, dmFinVCom, cosScatThetaCom, dmCosScatThetaTmpExp );
+        nuFinVExp = getNuFinVExp( dmInitVExp, dmFinVExp, dmM, nuM );
+
+        nuFinVTmpExpVec.SetX( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuCosScatPhiTmpExp );
+        nuFinVTmpExpVec.SetY( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuSinScatPhiTmpExp );
+        nuFinVTmpExpVec.SetZ( randomPM( ) * nuFinVExp * nuCosScatThetaTmpExp                      );
+
+        nuFinVTmpExpX = nuFinVTmpExpVec.X( );
+        nuFinVTmpExpY = nuFinVTmpExpVec.Y( );
+        nuFinVTmpExpZ = nuFinVTmpExpVec.Z( );
+
+        alpha        = getRotAngleAlpha( dmInitVExpVec );
+        beta         = getRotAngleBeta ( dmInitVExpVec );
+        nuFinVExpVec = rotation( nuFinVTmpExpVec, alpha, beta );
+
+        nuFinVExpX = nuFinVExpVec.X( );
+        nuFinVExpY = nuFinVExpVec.Y( );
+        nuFinVExpZ = nuFinVExpVec.Z( );
+        nuCosScatThetaExp = nuFinVExpVec.Z( ) / nuFinVExp;
+        nuSinScatThetaExp = sqrt( 1.0 - sq( nuCosScatThetaExp ) );
+        nuSinScatPhiExp   = randomPM( ) * nuFinVExpVec.Y( ) / nuFinVExp / nuCosScatThetaExp;
+        // nuSinScatPhiExp   = randomPM( ) * nuFinVExpVec.Y( ) / nuFinVExp / nuSinScatThetaExp;
+
+        nuScatThetaExp = asin( nuSinScatThetaExp );
+        nuScatPhiExp   = asin( nuSinScatPhiExp   );
+
+        nuRecoilE = getRecoilEnergy( nuM, nuFinVExp );
+        
+        rndm = gRandom->Rndm( );
+        formFactorSq = getFormFactorSq( nuRecoilE, atom );
+        if( rndm <= formFactorSq ) {
+            group = 1;
+            fprintf(fp1,"%d %d %lf %lf %lf %lf\n",
+                    group, atom, dmM, nuCosScatThetaExp, nuSinScatPhiExp, nuRecoilE );
+            //1     2     3    4    5                    6
+            fprintf(fp2,"%lf %lf %lf %lf %lf\n",
+                    dmInitVExpVec.X( ), dmInitVExpVec.Y( ), dmInitVExpVec.Z( ), nuM, nuFinVExp );
+
+            // pOutTree->Fill( );
+        }
+        pOutTree->Fill( );
+
+    }//end of event number loop
+
+    pOutTree->Write( );
+
+    printf("\n");
+    printf("%s", ctime(&t));//time to finish calc.
+    fclose(fp1);
+    fclose(fp2);
+
+    return 0;
+}
+
+
+//////////////////////////////////////////////////////////////////
+//
+// sub functions
+//
+//////////////////////////////////////////////////////////////////
 double randomPM()
 {
     return gRandom->Integer( 2 ) ? 1.0 : -1.0;
 }
 
-/*make square*/
 double sq( const double& x )
 {
     return pow( x, 2.0 );
@@ -20,20 +314,23 @@ double sq( const double& x )
 
 double gamFact( const double& velo )
 {
-    return 1.0 / sqrt( 1 + sq( velo/V_LIGHT ) );
+    // return 1.0 / sqrt( 1 + sq( velo/V_LIGHT ) );
+    return 1.0;
 }
 
-double getSinDmScatPhi( ){
+double getSinDmScatPhi( )
+{
     return sin( gRandom->Rndm( ) * 2.0 * PI );
 }
-
-double getDmCosScatTheta( const double& dmM, const double& nuM, const double& cosScatAngleCom ){
+double getDmCosScatTheta( const double& dmM, const double& nuM, const double& cosScatAngleCom )
+{
     double x = dmM / nuM;
     double dmCosScatTheta = ( 1.0 - sq( cosScatAngleCom ) ) / sq( cosScatAngleCom + x ) + 1.0;
     return 1.0 / sqrt( dmCosScatTheta );//always positive if DM is heavy
 }
 
-double getNuCosScatTheta( const double& cosScatThetaCom ){
+double getNuCosScatTheta( const double& cosScatThetaCom )
+{
     double theta2 = ( PI - acos(cosScatThetaCom) ) * 0.5;
     return cos( theta2 );//pm is automatically fixed.
 }
@@ -43,9 +340,12 @@ TVector3 getDmVVec( const double& velocity,
                     const double& phi )
 {
     TVector3 vec;
-    vec.SetX( -1.0 * velocity * cos(theta) * cos(phi) );
-    vec.SetY( -1.0 * velocity * cos(theta) * sin(phi) );
-    vec.SetZ( -1.0 * velocity * sin(theta)            );
+    // vec.SetX( -1.0 * velocity * cos(theta) * cos(phi) );
+    // vec.SetY( -1.0 * velocity * cos(theta) * sin(phi) );
+    // vec.SetZ( -1.0 * velocity * sin(theta)            );
+    vec.SetX( velocity * cos(theta) * cos(phi) );
+    vec.SetY( velocity * cos(theta) * sin(phi) );
+    vec.SetZ( velocity * sin(theta)            );
     return vec;
 }
 
@@ -80,7 +380,7 @@ double getRotAngleAlpha( TVector3 dmInitVExpVec ){
 
 double getRotAngleBeta( TVector3 dmInitVExpVec ){
     //returns rotation angle beta, which rotates vdmE to (0,0,Norm(vdmE))
-    return atan2( dmInitVExpVec.X( ), dmInitVExpVec.Z( ) );
+    return atan2( dmInitVExpVec.X( ), dmInitVExpVec.Y( ) );
 }
 
 //rotation from COM to Earth sys
@@ -127,158 +427,27 @@ double getFormFactorSq( const double& ER, const int& atom )
     return sq( formFactor );
 }
 
-int main( int argc, char** argv )
+
+//////////////////////////////////////////////////////////////////
+// Progress Bar
+void printProgressBar( const int& index, const int& total )
 {
-    time_t t = time( nullptr );
-    printf("%s", ctime(&t));//time to start
-
-    // set TRandom3
-    if( gRandom != nullptr && gRandom->GetName( ) != "Random3" ) {
-        delete gRandom;
-        gRandom == nullptr;
-    }
-
-    if( gRandom == nullptr )
-        gRandom = new TRandom3( 0 );
-
-    std::cout << "Select randomizer: " << gRandom->GetName( ) << std::endl;
-
-    if( argc != 3 ) {
-        std::cerr << "INPUT ERROR" << std::endl;
-        std::cerr << "./CRDMAccRand [input filename] [output filename]" << std::endl;
-        abort( );
-    }
-    String input  = argv[1];
-    String output = argv[2];
-    
-    double sysRelativeV = 0.0;
-    double dmFinVCom  = 0.0;
-    double nuFinVCom  = 0.0;
-    double dmInitVExp = 0.0;
-    double dmFinVExp  = 0.0;
-    double nuFinVExp     = 0.0;
-
-    double cosScatThetaCom = 0.0;
-    double dmSinScatTheta  = 0.0, nuSinScatTheta = 0.0;
-    double dmCosScatTheta  = 0.0, nuCosScatTheta = 0.0;
-    double dmSinScatPhi    = 0.0, nuSinScatPhi   = 0.0;
-    double dmCosScatPhi    = 0.0, nuCosScatPhi   = 0.0;
-
-    double nuRecoilE = 0.0;
-
-    double alpha = 0.0, beta = 0.0;
-
-    TVector3 dmInitVExpVec;
-    TVector3 nuFinVTmpExpVec;
-    TVector3 nuFinVExpVec;
-    
-    int flgFF=0,vflg=0,group;//~修正
-
-    double nuMList[15] = { };
-
-    //SI
-    nuMList[0]=0.932*(0.989*12.+0.011*13);//C
-    nuMList[1]=0.932*(0.950*32.+0.008*33.+0.042*34.);//S
-    nuMList[2]=0.932*(0.5069*79.+0.4931*81.);//Br
-    nuMList[3]=0.932*127.;//I
-    nuMList[11]=0.932*(0.5184*107.+0.48161*109.);//Ag
-    //SD
-    nuMList[10]=0.932*19.;//F
-
-    FILE* fp1 = fopen("data/dist_blue10GeV.dat", "wt");//output file
-    FILE* fp2 = fopen("data/output2_dist_blue10GeV.dat", "wt");//output file
-    int atom = 10;//here
-    printf("atom is %d (0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag)\n",atom);
-
-    double nuM = nuMList[ atom ];
-    double dmM = 10.;//DM mass
-    // printf("dmM=%5.1f #event=10^%2.0lf\n", dmM, log10f(snum));
-
-    // open input file
-    TFile inputFile( input.c_str( ) );
-    TTree* pInTree = dynamic_cast< TTree* >( inputFile.Get( "tree" ) );
-    if( pInTree == nullptr ) {
-        std::cerr << "Failed to read input file..." << std::endl;
-        abort( );
-    }
-
-    double velocity = 0.0, theta = 0.0, phi = 0.0;
-    pInTree->SetBranchAddress( "velocity", &velocity );
-    pInTree->SetBranchAddress( "theta",    &theta    );
-    pInTree->SetBranchAddress( "phi",      &phi      );
-
-    // open output file
-    TFile outputFile( output.c_str( ), "RECREATE" );
-    TTree* pOutTree = new TTree( "tree", "tree" );
-    pOutTree->SetDirectory( &outputFile );
-    pOutTree->Branch( "dmM",           &dmM            );
-    pOutTree->Branch( "nuM",           &nuM            );
-    pOutTree->Branch( "atom",          &atom           );
-    pOutTree->Branch( "dmInjV",        &velocity       );
-    pOutTree->Branch( "dmInjTheta",    &theta          );
-    pOutTree->Branch( "dmInjPhi",      &phi            );
-    pOutTree->Branch( "nuRecCosTheta", &nuCosScatTheta );
-    pOutTree->Branch( "nuRecSinPhi",   &nuSinScatPhi   );
-    pOutTree->Branch( "nuRecV",        &nuFinVExp      );
-    pOutTree->Branch( "nuRecE",        &nuRecoilE      );
-
-    int totEvt = pInTree->GetEntries( );
-    for( int evt = 0; evt < totEvt; ++evt ) {
-        pInTree->GetEntry( evt );
-        
-        dmInitVExpVec = getDmVVec( velocity, theta, phi );
-        dmInitVExp = dmInitVExpVec.Mag( );
-        
-        sysRelativeV = dmM / (dmM + nuM) * dmInitVExp;
-        cosScatThetaCom = gRandom->Uniform( -1.0, 1.0 );
-
-        dmCosScatTheta = getDmCosScatTheta( dmM, nuM, cosScatThetaCom );
-        nuCosScatTheta = getNuCosScatTheta( cosScatThetaCom );
-
-        dmFinVCom = nuM / ( dmM + nuM ) * dmInitVExp * gamFact( dmInitVExp );
-
-        dmFinVExp    = getDmVExp( sysRelativeV, dmFinVCom, cosScatThetaCom, dmCosScatTheta );
-        nuFinVExp    = getNuFinVExp( dmInitVExp, dmFinVExp, dmM, nuM );
-        dmSinScatPhi = getSinDmScatPhi( );
-        nuSinScatPhi = -dmSinScatPhi;
-      
-        nuSinScatTheta = sqrt( 1.0 - sq( nuCosScatTheta ) );
-        nuCosScatPhi   = sqrt( 1.0 - sq( nuSinScatPhi   ) );
-
-        nuFinVTmpExpVec.SetX( randomPM( ) * nuFinVExp * nuSinScatTheta * nuCosScatPhi );
-        nuFinVTmpExpVec.SetY( randomPM( ) * nuFinVExp * nuSinScatTheta * nuSinScatPhi );
-        nuFinVTmpExpVec.SetZ(               nuFinVExp * nuCosScatTheta                );
-
-        alpha        = getRotAngleAlpha( dmInitVExpVec );
-        beta         = getRotAngleBeta ( dmInitVExpVec );
-        nuFinVExpVec = rotation( nuFinVTmpExpVec, alpha, beta );
-
-        nuCosScatTheta = nuFinVExpVec.Z( ) / nuFinVExp;
-        nuSinScatTheta = sqrt( 1.0 - sq( nuCosScatTheta ) );
-        nuSinScatPhi   = randomPM( ) * nuFinVExpVec.Y( ) / nuFinVExp / nuSinScatTheta;
-
-        nuRecoilE = getRecoilEnergy( nuM, nuFinVExp );
-        if( gRandom->Rndm( ) <= getFormFactorSq( nuRecoilE, atom ) ){
-            group = 1;
-            fprintf(fp1,"%d %d %lf %lf %lf %lf\n",
-                    group, atom, dmM, nuCosScatTheta, nuSinScatPhi, nuRecoilE );
-            //1     2     3    4    5                    6
-            fprintf(fp2,"%lf %lf %lf %lf %lf\n",
-                    dmInitVExpVec.X( ), dmInitVExpVec.Y( ), dmInitVExpVec.Z( ), nuM, nuFinVExp );
-
-            pOutTree->Fill( );
+    if( index % 100 == 0 ) {
+        String printBar = " [";
+        double progress = static_cast< double >( index ) / static_cast< double >( total );
+        for( int bar = 0; bar < 20; ++bar ) {
+            double currentFraction = static_cast< double >( bar ) * 0.05;
+            if( progress > currentFraction ) printBar += "/";
+            else printBar += ".";
         }
-    }//end of event number loop
-
-    pOutTree->Write( );
-
-    printf("\n");
-    printf("%d events rejected.\n", flgFF);
-    printf("%s", ctime(&t));//time to finish calc.
-    fclose(fp1);
-    fclose(fp2);
-
-    return 0;
+        printBar += "] ";
+        double percent = 100.0 * progress;
+        StringStream percentSS;
+        percentSS << std::setprecision( 2 ) << percent;
+        String text = printBar + " ";
+        text += percentSS.str( );
+        std::cout << std::flush; 
+        std::cout << text << "%\r" << std::flush; 
+    }
+    return;
 }
-
-
