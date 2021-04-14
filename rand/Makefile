@@ -1,36 +1,37 @@
-GCC = g++       
-
 WHERE=.
 INCLUDE=${WHERE}/include
 LD_PATH = ${WHERE}/bin
 SRC = ${WHERE}/src
 
 ROOTFLAGS = $(shell root-config --cflags)
-CXXFLAGS = $(ROOTFLAGS) -std=c++11 -pthread -Wno-deprecated-declarations -m64
+CXXFLAGS = $(ROOTFLAGS) -Wno-deprecated-declarations -fPIC
 ROOTLIBS = $(shell root-config --libs)
 
-RLIB = -I${INCLUDE} -I./ShUtil -I${ROOTSYS}/include
+RLIB = -I${INCLUDE} -I./ShUtil
 
-TARGET = LNATrand CRDMrand CRDMFLXrand CRDMAccRand
+TARGET = LNATrand SimDMFlux SimNuclRecoil SimDMVelocity
 
 all:	${TARGET}
 
-LNATrand: ${SRC}/LNATrand.cc
-	g++ ${RLIB} $^ -o LNATRand ${CXXFLAGS} ${ROOTLIBS} -I./ShUtil
-	mv ./LNATRand ${LD_PATH}
+LNATrand: ${SRC}/LNATrand.o ${SRC}/CRDMFunc.o
+	g++ ${CXXFLAGS} -o LNATrand ${SRC}/LNATrand.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
+	mv ./LNATrand ${LD_PATH}
 
-CRDMrand: ${SRC}/CRDMrand.cc
-	g++ ${RLIB} $^ -o CRDMrand ${CXXFLAGS} ${ROOTLIBS} -I./ShUtil
-	mv ./CRDMrand ${LD_PATH}
+SimDMVelocity: ${SRC}/SimDMVelocity.o ${SRC}/CRDMFunc.o
+	g++ ${CXXFLAGS} -o SimDMVelocity ${SRC}/SimDMVelocity.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
+	mv ./SimDMVelocity ${LD_PATH}
 
-CRDMFLXrand: ${SRC}/CRDMFLXrand.cc
-	g++ ${RLIB} $^ -o CRDMFLXrand ${CXXFLAGS} ${ROOTLIBS} -I./ShUtil
-	mv ./CRDMFLXrand ${LD_PATH}
+SimDMFlux: ${SRC}/SimDMFlux.o ${SRC}/CRDMFunc.o
+	g++ ${CXXFLAGS} -o SimDMFlux ${SRC}/SimDMFlux.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
+	mv ./SimDMFlux ${LD_PATH}
 
-CRDMAccRand: ${SRC}/CRDMAccRand.cc
-	g++ ${RLIB} $^ -o CRDMAccRand ${CXXFLAGS} ${ROOTLIBS} -I./ShUtil
-	mv ./CRDMAccRand ${LD_PATH}
+SimNuclRecoil: ${SRC}/SimNuclRecoil.o ${SRC}/CRDMFunc.o
+	g++ ${CXXFLAGS} -o SimNuclRecoil ${SRC}/SimNuclRecoil.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
+	mv ./SimNuclRecoil ${LD_PATH}
+
+%.o: %.cc
+	g++ ${CXXFLAGS} ${RLIB} -O4 -c -o $@ $<
 
 clean:
-	rm -f *.o
+	rm -f ${SRC}/*.o
 	rm -f *~

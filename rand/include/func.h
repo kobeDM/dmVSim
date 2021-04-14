@@ -5,10 +5,10 @@ typedef struct TAGvec {
 } vec;
 
 typedef struct TAGvec4 {
-  double x;
-  double y;
-  double z;
-  double w;
+    double x;
+    double y;
+    double z;
+    double w;
 } vec4;
 
 double tmp;
@@ -21,24 +21,24 @@ double gamma_f=0.886227;
 
 /*make square*/
 double sq(double x){
-  return pow(x,2.);
-    }
+    return pow(x,2.);
+}
 
 /*......interpolate list f3[] by linear approx*/
 double linear(double *f3,double *x, double f)
 {
-  double a,b;
-  int j=0;
-  while(f3[j]<f){
-    j=j+1;
-  };
-  a=(x[j]-x[j-1])/(f3[j]-f3[j-1]);
-  b=x[j]-a*f3[j];
-   if(j==0){
-    a=0;
-    b=0;
-  }
-  return a*f+b;
+    double a,b;
+    int j=0;
+    while(f3[j]<f){
+        j=j+1;
+    };
+    a=(x[j]-x[j-1])/(f3[j]-f3[j-1]);
+    b=x[j]-a*f3[j];
+    if(j==0){
+        a=0;
+        b=0;
+    }
+    return a*f+b;
 }
 
 /*.................................*/
@@ -125,14 +125,14 @@ double h2(double x1,double x2)/*integrate from x1>x2*/
 /*.................................*/
 int xlist(double x[],double xmax)
 {
-  int j;
-  double step=.5;
-  j=0;
-  while(-1000.+j*step<xmax+step){
-    x[j]=-1000.+step*j;
-	j++;
-  }
-  return 0;
+    int j;
+    double step=.5;
+    j=0;
+    while(-1000.+j*step<xmax+step){
+        x[j]=-1000.+step*j;
+        j++;
+    }
+    return 0;
 }
 
 int f2list(double f3[],double xmax)
@@ -143,8 +143,8 @@ int f2list(double f3[],double xmax)
 	j=0;
 	s=f2(-1000.,1000.);
 	while(-1000.+j*step<xmax+step){
-	f3[j]=f2(-1000.,-1000.+step*j)/s;
-	j++; 
+        f3[j]=f2(-1000.,-1000.+step*j)/s;
+        j++; 
 	}
 	return 0;
 }
@@ -171,8 +171,8 @@ int g2list(double g3[],double xmax)
 	j=0;
 	s=g2(-1000.,1000.);
 	while(-1000.+j*step<xmax+step){
-	g3[j]=g2(-1000.,-1000.+step*j)/s;
-	j++; 
+        g3[j]=g2(-1000.,-1000.+step*j)/s;
+        j++; 
 	}
 	return 0;
 }
@@ -197,65 +197,65 @@ int h2list(double h3[],double xmax)
 //EOM**********************************************************************
 /*make plus or minus 1 randamly*/
 double randompm(){
-  if (rand()%2==0){return 1.;}
-  else{return -1.;}
+    if (rand()%2==0){return 1.;}
+    else{return -1.;}
 }
 
 double fSphi1(){
-  //return sin((rand()%360+1.)*3.1415/180.);
+    //return sin((rand()%360+1.)*3.1415/180.);
 	double pi=4.*atan(1);
 	return sin((double)(rand()*(360 - 0 + 1.0)/(1.0 + RAND_MAX)*pi/180.));
 }
 
 double fCtheta1(double mdm,double mn,double CT){
-  double ct1,x;
+    double ct1,x;
 
-  x=mdm/mn;
-  ct1=(1-sq(CT))/sq(CT+x)+1;
-  ct1=1/sqrt(ct1);
-  return ct1;//always positive since DM is heavy
+    x=mdm/mn;
+    ct1=(1-sq(CT))/sq(CT+x)+1;
+    ct1=1/sqrt(ct1);
+    return ct1;//always positive since DM is heavy
 }
 
 double fudm(double V,double Udm,double CT,double Ct1){
-  return (Udm*CT+V)/Ct1;
+    return (Udm*CT+V)/Ct1;
 }
 
 double fct2(double ct1,double mdm,double mn){
-  double x=mdm/mn;
-  double b,c,c2t2;
-  b=-x*(1-sq(ct1));
-  c=sq(x)*(1-sq(ct1))-sq(ct1);
+    double x=mdm/mn;
+    double b,c,c2t2;
+    b=-x*(1-sq(ct1));
+    c=sq(x)*(1-sq(ct1))-sq(ct1);
 
-  if(sq(b)-c<0){
-    printf("root is negative...\n");
-  }
+    if(sq(b)-c<0){
+        printf("root is negative...\n");
+    }
 
-  if(sq(-b+sqrt(sq(b)-c))>1){
-  c2t2=-b-sqrt(sq(b)-c);
-  //  printf("take - \n");
-  return sqrt((c2t2+1)/2);}
-  else{
-      c2t2=-b+sqrt(sq(b)-c);
-      //printf("take +\n");
-      return sqrt((c2t2+1)/2);}
+    if(sq(-b+sqrt(sq(b)-c))>1){
+        c2t2=-b-sqrt(sq(b)-c);
+        //  printf("take - \n");
+        return sqrt((c2t2+1)/2);}
+    else{
+        c2t2=-b+sqrt(sq(b)-c);
+        //printf("take +\n");
+        return sqrt((c2t2+1)/2);}
 }
 
 double fCtheta2(double CT){
-  double clight=299792.458;//km/s
-  double theta2,pi=4.*atan(1);
+    double clight=299792.458;//km/s
+    double theta2,pi=4.*atan(1);
 
-  theta2=(pi-acos(CT))/2;
-  return cos(theta2);//pm is automatically fixed.
-  }
+    theta2=(pi-acos(CT))/2;
+    return cos(theta2);//pm is automatically fixed.
+}
 
 double fun(double vdm,double udm,double mdm,double mn){
-  return sqrt(mdm/mn*(sq(vdm)-sq(udm)));
+    return sqrt(mdm/mn*(sq(vdm)-sq(udm)));
 }
 /*double fun(double V,double Un,double CT,double Ct2){
   double clight=299792.458;//km/s
 
   return (-Un*CT+V)/Ct2;
-}
+  }
 */
 
 double ER(double mn, double mdm, double un){
@@ -273,7 +273,7 @@ vec plus(vec a, vec b)
 }
 
 double norm(vec a){
-  return sqrt(sq(a.x)+sq(a.y)+sq(a.z));
+    return sqrt(sq(a.x)+sq(a.y)+sq(a.z));
 }
 
 double rotanglea(vec vdmE){
@@ -331,11 +331,11 @@ vec4 vdmE_rand(double vdm1,double vvdm2, double vdm2,double vdm3, int r){//vdm1;
     else{
         //at the earth
 		v1=plus(v1,ve);
-      }
-  vans.x = v1.x;
-  vans.y = v1.y;
-  vans.z = v1.z;
-  vans.w = vflg*1.;
+    }
+    vans.x = v1.x;
+    vans.y = v1.y;
+    vans.z = v1.z;
+    vans.w = vflg*1.;
     return vans;
 }
 
@@ -364,11 +364,12 @@ long double FF2(double ER, int atom){//ER in keV unit
     qr = 6.92*pow(10,-3)*sqrt(A*ER)*rn;
     qs = sqrt(2*1.932*A*ER)*0.9/197.3;
     if(atom == 0||atom == 2||atom == 11){
-    f=3.*(sin(qr)-qr*cos(qr))/(pow(qr,3.))*exp(-qs*qs/2.); //(4.3) of Lewin, for SI
+        f=3.*(sin(qr)-qr*cos(qr))/(pow(qr,3.))*exp(-qs*qs/2.); //(4.3) of Lewin, for SI
     }else{
         if(qr<2.55||4.5<qr){f=sin(qr)/(qr);}
         else{f=sqrt(0.047);}
     }//(4.2-4.5) of Lewin, for SD
     //printf("FF=%.30lf\n",f*f);
-    return f*f;}
+    return f*f;
+}
 /*end of subroutine*/

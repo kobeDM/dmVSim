@@ -1,10 +1,8 @@
-#include "inc/shinclude.h"
+#include "CRDMFunc.h"
 #include "TF3.h"
 #include "TRandom3.h"
 #include "TTree.h"
 #include "Math/IntegratorOptions.h"
-
-const double V_LIGHT = 299792.458; //km/s
 
 double   randomPM         ( );
 double   sq               ( const double& x );
@@ -35,19 +33,24 @@ double   getNuFinVExp     ( const double& dmInitVExp,
 double   getRecoilEnergy  ( const double& nuM,
                             const double& nuVExp );
 
-double   getRotAngleAlpha ( TVector3      dmInitVExpVec );
+// double   getRotAngleAlpha ( TVector3      dmInitVExpVec );
+
+// double   getRotAngleBeta  ( TVector3      dmInitVExpVec );
 
 double   getRotAngleBeta  ( TVector3      dmInitVExpVec );
 
+double   getRotAngleGamma ( TVector3      dmInitVExpVec );
+
+// TVector3 rotation         ( TVector3      u,
+//                             const double& al,
+//                             const double& be );
+
 TVector3 rotation         ( TVector3      u,
-                            const double& al,
-                            const double& be );
+                            const double& be,
+                            const double& ga );
 
 double   getFormFactorSq  ( const double& ER,
                             const int&    atom );
-
-void     printProgressBar ( const int&    index,
-                            const int&    total );
 
 //////////////////////////////////////////////////////////////////
 //
@@ -72,7 +75,7 @@ int main( int argc, char** argv )
 
     if( argc != 3 ) {
         std::cerr << "INPUT ERROR" << std::endl;
-        std::cerr << "./CRDMAccRand [input filename] [output filename]" << std::endl;
+        std::cerr << "./SimNuclRecoil [input filename] [output filename]" << std::endl;
         abort( );
     }
     String input  = argv[1];
@@ -107,7 +110,8 @@ int main( int argc, char** argv )
     double nuRecoilE    = 0.0;
     double formFactorSq = 0.0;
 
-    double alpha = 0.0, beta = 0.0;
+    // double alpha = 0.0, beta = 0.0;
+    double beta = 0.0, gamma = 0.0;
 
     TVector3 dmInitVExpVec;
     TVector3 nuFinVTmpExpVec;
@@ -150,8 +154,6 @@ int main( int argc, char** argv )
     pInTree->SetBranchAddress( "theta",    &theta    );
     pInTree->SetBranchAddress( "phi",      &phi      );
     
-
-
     // open output file
     TFile outputFile( output.c_str( ), "RECREATE" );
     TTree* pOutTree = new TTree( "tree", "tree" );
@@ -204,8 +206,10 @@ int main( int argc, char** argv )
     pOutTree->Branch( "scatThetaCom",     &scatThetaCom      );
     pOutTree->Branch( "cosScatThetaCom",  &cosScatThetaCom   );
                                                               
-    pOutTree->Branch( "alpha",            &alpha             );
+    // pOutTree->Branch( "alpha",            &alpha             );
+    // pOutTree->Branch( "beta",             &beta              );
     pOutTree->Branch( "beta",             &beta              );
+    pOutTree->Branch( "gamma",            &gamma             );
     pOutTree->Branch( "formFactorSq",     &formFactorSq      );
 
     pOutTree->Branch( "rndm",             &rndm              );
@@ -237,7 +241,6 @@ int main( int argc, char** argv )
         dmScatPhiTmpExp    = asin( dmSinScatPhiTmpExp );
 
         nuSinScatPhiTmpExp = sin( PI - dmScatPhiTmpExp );
-        // nuSinScatPhiTmpExp = -dmSinScatPhiTmpExp;
         nuCosScatPhiTmpExp = sqrt( 1.0 - sq( nuSinScatPhiTmpExp ) );
         nuScatPhiTmpExp    = asin( nuSinScatPhiTmpExp );
 
@@ -245,28 +248,43 @@ int main( int argc, char** argv )
         dmFinVExp = getDmVExp( sysRelativeV, dmFinVCom, cosScatThetaCom, dmCosScatThetaTmpExp );
         nuFinVExp = getNuFinVExp( dmInitVExp, dmFinVExp, dmM, nuM );
 
-        nuFinVTmpExpVec.SetX( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuCosScatPhiTmpExp );
-        nuFinVTmpExpVec.SetY( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuSinScatPhiTmpExp );
-        nuFinVTmpExpVec.SetZ( randomPM( ) * nuFinVExp * nuCosScatThetaTmpExp                      );
+        // nuFinVTmpExpVec.SetX( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuCosScatPhiTmpExp );
+        // nuFinVTmpExpVec.SetY( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuSinScatPhiTmpExp );
+        // nuFinVTmpExpVec.SetZ( randomPM( ) * nuFinVExp * nuCosScatThetaTmpExp                      );
+
+        // nuFinVTmpExpVec.SetX( nuFinVExp * nuSinScatThetaTmpExp * nuCosScatPhiTmpExp );
+        // nuFinVTmpExpVec.SetY( nuFinVExp * nuSinScatThetaTmpExp * nuSinScatPhiTmpExp );
+        // nuFinVTmpExpVec.SetZ( nuFinVExp * nuCosScatThetaTmpExp                      );
+
+        nuFinVTmpExpVec.SetY( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuCosScatPhiTmpExp );
+        nuFinVTmpExpVec.SetZ( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuSinScatPhiTmpExp );
+        nuFinVTmpExpVec.SetX( nuFinVExp * nuCosScatThetaTmpExp                      );
+
 
         nuFinVTmpExpX = nuFinVTmpExpVec.X( );
         nuFinVTmpExpY = nuFinVTmpExpVec.Y( );
         nuFinVTmpExpZ = nuFinVTmpExpVec.Z( );
 
-        alpha        = getRotAngleAlpha( dmInitVExpVec );
+        // alpha        = getRotAngleAlpha( dmInitVExpVec );
+        // beta         = getRotAngleBeta ( dmInitVExpVec );
+        // nuFinVExpVec = rotation( nuFinVTmpExpVec, alpha, beta );
+
         beta         = getRotAngleBeta ( dmInitVExpVec );
-        nuFinVExpVec = rotation( nuFinVTmpExpVec, alpha, beta );
+        gamma        = getRotAngleGamma( dmInitVExpVec );
+        nuFinVExpVec = rotation( nuFinVTmpExpVec, beta, gamma );
+
 
         nuFinVExpX = nuFinVExpVec.X( );
         nuFinVExpY = nuFinVExpVec.Y( );
         nuFinVExpZ = nuFinVExpVec.Z( );
-        nuCosScatThetaExp = nuFinVExpVec.Z( ) / nuFinVExp;
-        nuSinScatThetaExp = sqrt( 1.0 - sq( nuCosScatThetaExp ) );
-        nuSinScatPhiExp   = randomPM( ) * nuFinVExpVec.Y( ) / nuFinVExp / nuCosScatThetaExp;
-        // nuSinScatPhiExp   = randomPM( ) * nuFinVExpVec.Y( ) / nuFinVExp / nuSinScatThetaExp;
+        nuSinScatThetaExp = nuFinVExpVec.Z( ) / nuFinVExp;
+        nuCosScatThetaExp = sqrt( 1.0 - sq( nuSinScatThetaExp ) );
+        nuSinScatPhiExp   = nuFinVExpVec.Y( ) / nuFinVExp / nuCosScatThetaExp;
 
         nuScatThetaExp = asin( nuSinScatThetaExp );
         nuScatPhiExp   = asin( nuSinScatPhiExp   );
+        if( nuFinVExpVec.X( ) < 0.0 ) nuScatPhiExp = PI - nuScatPhiExp;
+        if( nuScatPhiExp < 0.0 ) nuScatPhiExp = nuScatPhiExp + 2.0 * PI;
 
         nuRecoilE = getRecoilEnergy( nuM, nuFinVExp );
         
@@ -373,27 +391,51 @@ double getRecoilEnergy( const double& nuM,
     return pow( 10.0, 6.0 ) * nuM * sq( nuVExp/V_LIGHT ) * 0.5;
 }
 
-double getRotAngleAlpha( TVector3 dmInitVExpVec ){
-    //returns rotation angle alpha, which rotates vdmE to (0,0,Norm(vdmE))
-    return -1.0 * asin( dmInitVExpVec.Y( ) / dmInitVExpVec.Mag( ) );
-}
+// double getRotAngleAlpha( TVector3 dmInitVExpVec ){
+//     //returns rotation angle alpha, which rotates vdmE to (0,0,Norm(vdmE))
+//     return -1.0 * asin( dmInitVExpVec.Y( ) / dmInitVExpVec.Mag( ) );
+// }
+
+// double getRotAngleBeta( TVector3 dmInitVExpVec ){
+//     //returns rotation angle beta, which rotates vdmE to (0,0,Norm(vdmE))
+//     return atan2( dmInitVExpVec.X( ), dmInitVExpVec.Z( ) );
+// }
+
 
 double getRotAngleBeta( TVector3 dmInitVExpVec ){
     //returns rotation angle beta, which rotates vdmE to (0,0,Norm(vdmE))
-    return atan2( dmInitVExpVec.X( ), dmInitVExpVec.Y( ) );
+    return -1.0 * asin( dmInitVExpVec.Z( ) / dmInitVExpVec.Mag( ) );
 }
+
+double getRotAngleGamma( TVector3 dmInitVExpVec ){
+    //returns rotation angle alpha, which rotates vdmE to (0,0,Norm(vdmE))
+    return atan2( dmInitVExpVec.Y( ), dmInitVExpVec.X( ) );
+}
+
+// //rotation from COM to Earth sys
+// TVector3 rotation( TVector3      u,
+//                    const double& al,
+//                    const double& be )
+// {
+//     TVector3 ans;
+//     ans.SetX(  u.X( ) * cos( be ) + u.Y( ) * sin( al ) * sin( be ) + u.Z( ) * cos( al ) * sin( be ) );
+//     ans.SetY(                       u.Y( ) * cos( al )             - u.Z( ) * sin( al )             );
+//     ans.SetZ( -u.X( ) * sin( be ) + u.Y( ) * sin( al ) * cos( be ) + u.Z( ) * cos( al ) * cos( be ) );
+//     return ans;
+// }
 
 //rotation from COM to Earth sys
 TVector3 rotation( TVector3      u,
-                   const double& al,
-                   const double& be )
+                   const double& be,
+                   const double& ga )
 {
     TVector3 ans;
-    ans.SetX(  u.X( ) * cos( be ) + u.Y( ) * sin( al ) * sin( be ) + u.Z( ) * cos( al ) * sin( be ) );
-    ans.SetY(                       u.Y( ) * cos( al )             - u.Z( ) * sin( al ) );
-    ans.SetZ( -u.X( ) * sin( be ) + u.Y( ) * sin( al ) * cos( be ) + u.Z( ) * cos( al ) * cos( be ) );
+    ans.SetX(  u.X( ) * cos( be ) * cos( ga ) - u.Y( ) * sin( ga ) + u.Z( ) * sin( be ) * cos( ga ) );
+    ans.SetY(  u.X( ) * cos( be ) * sin( ga ) + u.Y( ) * cos( ga ) + u.Z( ) * sin( be ) * sin( ga ) );
+    ans.SetZ( -u.X( ) * sin( be )                                  + u.Z( ) * cos( be )             );
     return ans;
 }
+
 
 /*Form factor******************************/
 
@@ -427,27 +469,3 @@ double getFormFactorSq( const double& ER, const int& atom )
     return sq( formFactor );
 }
 
-
-//////////////////////////////////////////////////////////////////
-// Progress Bar
-void printProgressBar( const int& index, const int& total )
-{
-    if( index % 100 == 0 ) {
-        String printBar = " [";
-        double progress = static_cast< double >( index ) / static_cast< double >( total );
-        for( int bar = 0; bar < 20; ++bar ) {
-            double currentFraction = static_cast< double >( bar ) * 0.05;
-            if( progress > currentFraction ) printBar += "/";
-            else printBar += ".";
-        }
-        printBar += "] ";
-        double percent = 100.0 * progress;
-        StringStream percentSS;
-        percentSS << std::setprecision( 2 ) << percent;
-        String text = printBar + " ";
-        text += percentSS.str( );
-        std::cout << std::flush; 
-        std::cout << text << "%\r" << std::flush; 
-    }
-    return;
-}
