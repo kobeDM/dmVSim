@@ -113,14 +113,7 @@ double getTIntegral    ( double pM,
     func.SetParameter( 0, pM );
     func.SetParameter( 1, dmM );
 
-    // ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-6);
-    // ROOT::Math::IntegratorOneDimOptions::SetDefaultAbsTolerance(1.E-6);
-    // ROOT::Math::IntegratorMultiDimOptions::SetDefaultRelTolerance(1.E-6);
-    // ROOT::Math::IntegratorMultiDimOptions::SetDefaultAbsTolerance(1.E-6);
-
-    // DEBUG(getTMin( pM, dmE, dmM ) );
     return func.Integral( getTMin( pM, dmE, dmM ), 10000000.0 );
-    // return 1.0;
 }
 
 double getDMFlux       ( double theta,
@@ -149,7 +142,7 @@ double getDMFlux       ( double theta,
 
     double relR     = r / dmRScale;
     double rhoNFW   = dmDScale / (relR*pow( 1 + relR, 2 ));
-    double jacobian = los*los*cosTheta;
+    double jacobian = los*los; // Note: This jacobian should only affect the los. Do not add cosTheta!!!
     double fluxCorr = 1.0 / (4.0*TMath::Pi()*los*los);
 
     return TIntegral * fluxCorr * jacobian * dmXS / dmM * rhoNFW * formFactor * formFactor;

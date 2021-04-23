@@ -8,7 +8,7 @@ int main( int argc, char** argv )
 {
     if( argc != 4 ) {
         std::cerr << "INPUT ERROR" << std::endl;
-        std::cerr << "./SimDMFlux [DM energy:Tx (GeV)] [DM mass (GeV)]" << std::endl;
+        std::cerr << "./SimDMFlux [DM energy:Tx (GeV)] [DM mass (GeV)] [events]" << std::endl;
         abort( );
     }
 
@@ -28,7 +28,6 @@ int main( int argc, char** argv )
     DEBUG(getTIntegral(PROTON_MASS, dmE, dmM));
     // return 0;
 
-    // TF3 func( "flux", getDMFlux, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, 10.0, 8, 3 );
     TF3 func( "flux", getDMFlux, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, LOS_LIMIT, 8, 3 );
     func.SetParameter( 0, PROTON_MASS       );
     func.SetParameter( 1, dmE               );
