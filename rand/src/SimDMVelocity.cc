@@ -32,7 +32,8 @@ int main( int argc, char** argv )
     double xsection = PC2CM*PC2CM*1e-30;
     double rhoScaleKPC = DM_RHO_SCALE / ( PC2CM*PC2CM*PC2CM ); // converted to [GeV / kpc^3]
 
-    TF3 func( "flux", getDMFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
+    // TF3 func( "flux", getDMFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
+    TF3 func( "flux", getDMFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, 5000.0, 8, 3 );
     func.SetParameter( 0, PROTON_MASS       );
     func.SetParameter( 1, los               );
     func.SetParameter( 2, dmM               );
@@ -43,9 +44,9 @@ int main( int argc, char** argv )
     func.SetParameter( 7, LAMBDA_P          );
     double totValue = PC2CM*PC2CM*func.Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT );
 
-    // func.SetNpx(100);
-    // func.SetNpy(100);
-    // func.SetNpz(200);
+    func.SetNpx(100);
+    func.SetNpy(100);
+    func.SetNpz(1000);
 
     // Test
     // TCanvas cvs( "cvs", "cvs", 800, 600 );
@@ -79,7 +80,7 @@ int main( int argc, char** argv )
     pTree->Branch( "lambdaP",     &lambdaP     );
     
     for( int i = 0; i < evtNum; ++i ) {
-        // printProgressBar( i, evtNum );
+        printProgressBar( i, evtNum );
         func.GetRandom3( theta, phi, velocity );
         pTree->Fill( );
     }
