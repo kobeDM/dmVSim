@@ -15,6 +15,7 @@
 
 ```bash
 cd rand
+mkdir bin
 make
 ```
 
