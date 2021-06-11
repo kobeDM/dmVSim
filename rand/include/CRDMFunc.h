@@ -33,7 +33,7 @@ double getTMin         ( double pM,
 double getTIntegral    ( double pM,
                          double dmE,
                          double dmM );
-double getDMFlux       ( double theta,
+double getDMNFWFlux    ( double theta,
                          double phi,
                          double los,
                          double pM,
@@ -44,10 +44,28 @@ double getDMFlux       ( double theta,
                          double dmRScale,
                          double sunDist,
                          double lambdaP );
-double getDMFlux       ( double* x,
+double getDMNFWFlux    ( double* x,
                          double* par );
-double getDMFluxV      ( double* x,
+double getDMNFWFluxV   ( double* x,
                          double* par );
+
+double getDMIsoThermalFlux    ( double theta,
+                                double phi,
+                                double los,
+                                double pM,
+                                double dmE,
+                                double dmM,
+                                double dmXS,
+                                double dmDScale,
+                                double dmRScale,
+                                double sunDist,
+                                double lambdaP );
+double getDMIsoThermalFlux    ( double* x,
+                                double* par );
+double getDMIsoThermalFluxV   ( double* x,
+                                double* par );
+
+
 void   printProgressBar( const int& index, const int& total );
 
 #endif // CRDM_FUNC_H
