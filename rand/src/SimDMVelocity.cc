@@ -60,9 +60,9 @@ int main( int argc, char** argv )
     pFunc->SetParameter( 7, LAMBDA_P          );
     double totValue = PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT );
 
-    pFunc->SetNpx(200);
-    pFunc->SetNpy(200);
-    pFunc->SetNpz(5000);
+    pFunc->SetNpx(100);
+    pFunc->SetNpy(100);
+    pFunc->SetNpz(100);
 
     gRandom->SetSeed( 0 );
 
