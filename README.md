@@ -21,7 +21,7 @@ make
 
 実行ファイルがbin以下にできているので、それぞれ以下のように実行
 ```bash
-./bin/SimDMFlux [DM energy:Tx (GeV)] [DM mass (GeV)] [profile (NFW or IT)] [the number of events]
-./bin/SimDMVelocity [l.o.s. (kpc)] [DM mass (GeV)] [profile (NFW or IT)] [The number of events] [output filename]
+./bin/SimDMFlux [DM energy:Tx (GeV)] [DM mass (GeV)] [profile (NFW or IT or EIN)] [the number of events]
+./bin/SimDMVelocity [l.o.s. (kpc)] [DM mass (GeV)] [profile (NFW or IT or EIN)] [The number of events] [output filename]
 ./bin/SimNuclRecoil [input filename] [output filename]
 ```
