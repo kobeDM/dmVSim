@@ -113,6 +113,9 @@ double getTIntegral( double pM,
     return func.Integral( getTMin( pM, dmE, dmM ), 10000000.0 );
 }
 
+/////////////////////////////////////////////////////////////////////////
+// NFW profile
+/////////////////////////////////////////////////////////////////////////
 double getDMNFWFlux( double theta,
                      double phi,
                      double los,
@@ -185,10 +188,9 @@ double getDMNFWFluxV( double* x,
     return flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
 }
 
-
-
-
-
+/////////////////////////////////////////////////////////////////////////
+// Iso-thermal profile
+/////////////////////////////////////////////////////////////////////////
 double getDMIsoThermalFlux( double theta,
                             double phi,
                             double los,
@@ -258,6 +260,82 @@ double getDMIsoThermalFluxV( double* x,
     double dmE      = dmM * (gamma - 1.0);
 
     double flux = getDMIsoThermalFlux( theta, phi, los, pM, dmE, dmM, dmXS, dmDScale, dmRScale, sunDist, lambdaP );
+    return flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+// Einasto profile
+/////////////////////////////////////////////////////////////////////////
+double getDMEinastoFlux( double theta,
+                         double phi,
+                         double los,
+                         double pM,
+                         double dmE,
+                         double dmM,
+                         double dmXS,
+                         double dmDScale,
+                         double dmRScale,
+                         double sunDist,
+                         double lambdaP )
+{
+    if( pM < 0.0 || dmE < 0.0 || dmM < 0.0 || dmXS < 0.0 || dmDScale < 0.0 || dmRScale < 0.0 || sunDist < 0.0 )
+        return -100.0;
+
+    double TIntegral = getTIntegral( pM, dmE, dmM );
+    // double TIntegral = 1.0;
+    double formFactor = 1.0 / pow( 1.0 + (2.0 * dmM * dmE) / (lambdaP*lambdaP), 2 );
+    
+    double cosTheta = cos( theta );
+    double cosPhi   = cos( phi );
+    double rsq      = los*los + sunDist*sunDist - 2*los*sunDist*cosTheta*cosPhi;
+    double r        = sqrt( fabs( rsq ) );
+
+    double relR     = r / dmRScale;
+    double rhoEinasto   = dmDScale * exp( -2.0 * ( pow( relR, EIN_ALPHA ) - 1.0 ) / EIN_ALPHA );
+    double jacobian = los*los; // Note: This jacobian should only affect the los. Do not add cosTheta!!!
+    double fluxCorr = 1.0 / (4.0*TMath::Pi()*los*los);
+
+    return TIntegral * fluxCorr * jacobian * dmXS / dmM * rhoEinasto * formFactor * formFactor;
+}
+
+double getDMEinastoFlux( double* x,
+                         double* par )
+{
+    double theta    = x[0];
+    double phi      = x[1];
+    double los      = x[2];
+    double pM       = par[0];
+    double dmE      = par[1];
+    double dmM      = par[2];
+    double dmXS     = par[3];
+    double dmDScale = par[4];
+    double dmRScale = par[5];
+    double sunDist  = par[6];
+    double lambdaP  = par[7];
+
+    return getDMEinastoFlux( theta, phi, los, pM, dmE, dmM, dmXS, dmDScale, dmRScale, sunDist, lambdaP );
+}
+
+double getDMEinastoFluxV( double* x,
+                          double* par )
+{
+    double theta    = x[0];
+    double phi      = x[1];
+    double velo     = x[2];
+    double pM       = par[0];
+    double los      = par[1];
+    double dmM      = par[2];
+    double dmXS     = par[3];
+    double dmDScale = par[4];
+    double dmRScale = par[5];
+    double sunDist  = par[6];
+    double lambdaP  = par[7];
+
+    double gamma    = 1.0 / sqrt( 1 - pow( velo / V_LIGHT , 2) );
+    double dmE      = dmM * (gamma - 1.0);
+
+    double flux = getDMEinastoFlux( theta, phi, los, pM, dmE, dmM, dmXS, dmDScale, dmRScale, sunDist, lambdaP );
     return flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
 }
 

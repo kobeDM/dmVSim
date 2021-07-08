@@ -8,7 +8,7 @@ int main( int argc, char** argv )
 {
     if( argc != 5 ) {
         std::cerr << "INPUT ERROR" << std::endl;
-        std::cerr << "./SimDMFlux [DM energy:Tx (GeV)] [DM mass (GeV)] [profile (NFW or IT)] [events]" << std::endl;
+        std::cerr << "./SimDMFlux [DM energy:Tx (GeV)] [DM mass (GeV)] [profile (NFW or IT or EIN)] [events]" << std::endl;
         abort( );
     }
 
@@ -19,7 +19,7 @@ int main( int argc, char** argv )
     
     if( profile != "NFW" && profile != "IT" ) {
         std::cerr << "The dark matter profile: " << profile << " is not supported by this program..." << std::endl;
-        std::cerr << "Choose NFW or IT (isothermal)." << std::endl;
+        std::cerr << "Choose NFW or IT (isothermal) EIN (Einasto)." << std::endl;
         abort( );
     }
     
@@ -40,7 +40,10 @@ int main( int argc, char** argv )
         pFunc = new TF3( "flux", getDMNFWFlux, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, LOS_LIMIT, 8, 3 );
     }
     else if( profile == "IT" ) {
-        pFunc = new TF3( "flux", getDMIsoThermalFlux, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, LOS_LIMIT, 8, 3 );        
+        pFunc = new TF3( "flux", getDMIsoThermalFlux, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, LOS_LIMIT, 8, 3 );
+    }
+    else if( profile == "EIN" ) {
+        pFunc = new TF3( "flux", getDMEinastoFlux, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, LOS_LIMIT, 8, 3 );         
     }
 
     pFunc->SetParameter( 0, PROTON_MASS       );

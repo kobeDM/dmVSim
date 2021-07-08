@@ -14,7 +14,7 @@ int main( int argc, char** argv )
 {
     if( argc != 6 ) {
         std::cerr << "INPUT ERROR" << std::endl;
-        std::cerr << "./SimDMVelocity [l.o.s. (kpc)] [DM mass (GeV)] [profile (NFW or IT)] [The number of events] [output filename]" << std::endl;
+        std::cerr << "./SimDMVelocity [l.o.s. (kpc)] [DM mass (GeV)] [profile (NFW or IT or EIN)] [The number of events] [output filename]" << std::endl;
         abort( );
     }
 
@@ -24,9 +24,9 @@ int main( int argc, char** argv )
     int    evtNum   = std::stoi(argv[4]);
     String fileName = argv[5];
 
-    if( profile != "NFW" && profile != "IT" ) {
+    if( profile != "NFW" && profile != "IT" && profile != "EIN" ) {
         std::cerr << "The dark matter profile: " << profile << " is not supported by this program..." << std::endl;
-        std::cerr << "Choose NFW or IT (isothermal)." << std::endl;
+        std::cerr << "Choose NFW or IT (isothermal) or EIN (Einasto)." << std::endl;
         abort( );
     }
 
@@ -45,6 +45,9 @@ int main( int argc, char** argv )
     }
     else if( profile == "IT" ) {
         pFunc = new TF3( "flux", getDMIsoThermalFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
+    }
+    else if( profile == "EIN" ) {
+        pFunc = new TF3( "flux", getDMEinastoFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
     }
 
     pFunc->SetParameter( 0, PROTON_MASS       );
