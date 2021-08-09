@@ -100,6 +100,10 @@ int main( int argc, char** argv )
     double dmSinScatPhiTmpExp    = 0.0, nuSinScatPhiTmpExp   = 0.0;
     double dmCosScatPhiTmpExp    = 0.0, nuCosScatPhiTmpExp   = 0.0;
 
+    double dmGamma = 0.0;
+    double dmMomTmpExp = 0.0, dmETmpExp = 0.0;
+    double dmMomCom = 0.0;
+
     double nuRecoilE    = 0.0;
     double formFactorSq = 0.0;
 
@@ -164,6 +168,10 @@ int main( int argc, char** argv )
     pOutTree->Branch( "dmInjTheta",       &theta             );
     pOutTree->Branch( "dmInjPhi",         &phi               );
 
+    pOutTree->Branch( "dmInGamma",        &dmGamma           );
+    pOutTree->Branch( "dmInMomTmpExp",    &dmMomTmpExp       );
+    pOutTree->Branch( "dmInETmpExp",      &dmETmpExp         );
+
     pOutTree->Branch( "dmOutPhiTmpExp",   &dmScatPhiTmpExp   );
     pOutTree->Branch( "dmOutThetaTmpExp", &dmScatThetaTmpExp );
     pOutTree->Branch( "dmOutCosPhiTmpExp",   &dmCosScatPhiTmpExp   );
@@ -202,6 +210,8 @@ int main( int argc, char** argv )
 
     pOutTree->Branch( "scatThetaCom",     &scatThetaCom      );
     pOutTree->Branch( "cosScatThetaCom",  &cosScatThetaCom   );
+    pOutTree->Branch( "dmMomCom",         &dmMomCom          );
+    
                                                               
     pOutTree->Branch( "beta",             &beta              );
     pOutTree->Branch( "gamma",            &gamma             );
@@ -224,11 +234,11 @@ int main( int argc, char** argv )
         dmInitVExpZ   = dmInitVExpVec.Z( );
         dmInitVExp    = dmInitVExpVec.Mag( );
 
-        double dmGamma = 1.0 / sqrt(1.0 - sq( dmInitVExp / V_LIGHT ) );
-        double dmMomTmpExp = dmGamma * dmM * dmInitVExp;
-        double dmETmpExp = sqrt( sq( dmMomTmpExp ) + sq( dmM ) );
+        dmGamma = 1.0 / sqrt(1.0 - sq( dmInitVExp / V_LIGHT ) );
+        dmMomTmpExp = dmGamma * dmM * dmInitVExp / V_LIGHT;
+        dmETmpExp = sqrt( sq( dmMomTmpExp ) + sq( dmM ) );
         mandelS = sq( sqrt( sq( dmM ) + sq( dmMomTmpExp ) ) + nuM ) - sq( dmMomTmpExp );
-        double dmMomCom = sqrt( ( mandelS - sq( dmM - nuM ) ) * ( mandelS - sq( dmM + nuM ) )  ) / ( 2.0 * sqrt( mandelS ) );
+        dmMomCom = sqrt( ( mandelS - sq( dmM - nuM ) ) * ( mandelS - sq( dmM + nuM ) )  ) / ( 2.0 * sqrt( mandelS ) );
 
         scatThetaCom = gRandom->Rndm( ) * 1.0 * PI;
         cosScatThetaCom = cos( scatThetaCom );
@@ -237,7 +247,7 @@ int main( int argc, char** argv )
         // calculate theta and E at a Lab'-frame
         nuFinETmpExp = ( 2.0 * nuM * nuM - mandelT ) / ( 2.0 * nuM );
         nuFinMomTmpExp = sqrt( sq( nuFinETmpExp ) - sq( nuM ) );
-        mandelU = sq( sqrt( sq( dmM ) + sq( dmMomTmpExp ) ) + nuM ) - sq( nuFinMomTmpExp );
+        mandelU = 2.0 * pow( dmM, 2.0 ) + 2.0 * pow( nuM, 2.0 ) - mandelS - mandelT;
 
         nuCosScatThetaTmpExp = ( mandelU - sq( dmM ) - sq( nuM ) + 2.0 * dmETmpExp * nuFinETmpExp ) / ( 2.0 * dmMomTmpExp * nuFinMomTmpExp );
         nuSinScatThetaTmpExp = sqrt( 1.0 - sq( nuCosScatThetaTmpExp ) );
@@ -245,7 +255,7 @@ int main( int argc, char** argv )
 
         nuScatPhiTmpExp = gRandom->Rndm( ) * 2.0 * PI;
         nuSinScatPhiTmpExp = sin( nuScatPhiTmpExp );
-        nuCosScatPhiTmpExp = sin( nuScatPhiTmpExp );
+        nuCosScatPhiTmpExp = cos( nuScatPhiTmpExp );
 
         nuFinVExp = V_LIGHT * nuFinMomTmpExp / nuFinETmpExp;
         nuFinVTmpExpVec.SetY( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuCosScatPhiTmpExp );
