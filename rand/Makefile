@@ -9,7 +9,7 @@ ROOTLIBS = $(shell root-config --libs)
 
 RLIB = -I${INCLUDE} -I./ShUtil
 
-TARGET = LNATrand SimDMFlux SimNuclRecoil SimDMVelocity
+TARGET = LNATrand SimDMFlux SimNuclRecoil SimNuclRecoilRel SimDMVelocity
 
 all:	${TARGET}
 
@@ -28,6 +28,10 @@ SimDMFlux: ${SRC}/SimDMFlux.o ${SRC}/CRDMFunc.o
 SimNuclRecoil: ${SRC}/SimNuclRecoil.o ${SRC}/CRDMFunc.o
 	g++ ${CXXFLAGS} -o SimNuclRecoil ${SRC}/SimNuclRecoil.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
 	mv ./SimNuclRecoil ${LD_PATH}
+
+SimNuclRecoilRel: ${SRC}/SimNuclRecoilRel.o ${SRC}/CRDMFunc.o
+	g++ ${CXXFLAGS} -o SimNuclRecoilRel ${SRC}/SimNuclRecoilRel.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
+	mv ./SimNuclRecoilRel ${LD_PATH}
 
 %.o: %.cc
 	g++ ${CXXFLAGS} ${RLIB} -O4 -c -o $@ $<
