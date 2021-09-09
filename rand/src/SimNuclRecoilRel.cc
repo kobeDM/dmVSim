@@ -250,7 +250,7 @@ int main( int argc, char** argv )
         mandelU = 2.0 * pow( dmM, 2.0 ) + 2.0 * pow( nuM, 2.0 ) - mandelS - mandelT;
 
         nuCosScatThetaTmpExp = ( mandelU - sq( dmM ) - sq( nuM ) + 2.0 * dmETmpExp * nuFinETmpExp ) / ( 2.0 * dmMomTmpExp * nuFinMomTmpExp );
-        nuSinScatThetaTmpExp = sqrt( 1.0 - sq( nuCosScatThetaTmpExp ) );
+        nuSinScatThetaTmpExp = randomPM( ) * sqrt( 1.0 - sq( nuCosScatThetaTmpExp ) );
         nuScatThetaTmpExp = asin( nuSinScatThetaTmpExp );
 
         nuScatPhiTmpExp = gRandom->Rndm( ) * 2.0 * PI;

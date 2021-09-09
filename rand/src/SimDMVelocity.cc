@@ -12,6 +12,11 @@ const String CR_P_INPUT   = "./data/GALPROP_p.txt";
 //////////////////////////////////////////////////////////////////
 int main( int argc, char** argv )
 {
+    clock_t start = clock( );
+
+    // time_t t = time( nullptr );
+    // printf("%s", ctime(&t));//time to start
+
     if( argc != 6 ) {
         std::cerr << "INPUT ERROR" << std::endl;
         std::cerr << "./SimDMVelocity [l.o.s. (kpc)] [DM mass (GeV)] [profile (NFW or IT or EIN)] [The number of events] [output filename]" << std::endl;
@@ -60,9 +65,9 @@ int main( int argc, char** argv )
     pFunc->SetParameter( 7, LAMBDA_P          );
     double totValue = PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT );
 
-    pFunc->SetNpx(100);
-    pFunc->SetNpy(100);
-    pFunc->SetNpz(100);
+    pFunc->SetNpx(20);
+    pFunc->SetNpy(20);
+    pFunc->SetNpz(20);
 
     gRandom->SetSeed( 0 );
 
@@ -97,6 +102,11 @@ int main( int argc, char** argv )
     }
 
     pTree->Write( );
+
+    clock_t stop = clock( );
+
+    DEBUG((stop-start)/ static_cast< const float >( CLOCKS_PER_SEC));
+    // printf("%s", ctime(&t));//time to finish calc.
 
     return 0;
 }

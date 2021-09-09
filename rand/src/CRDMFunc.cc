@@ -24,7 +24,6 @@ bool readGalprop( const String& input )
 
 double getDiffFlux( const double& energy )
 {
-    double flux = 0.0;
     double eneMinBin = 0.0, eneMaxBin = 0.0;
     double flxMinBin = 0.0, flxMaxBin = 0.0;
 
@@ -50,8 +49,7 @@ double getDiffFlux( const double& energy )
         idx++;
     }
 
-    flux = (flxMaxBin - flxMinBin) / (eneMaxBin - eneMinBin) * (energy - eneMinBin) + flxMinBin;
-    return flux;
+    return (flxMaxBin - flxMinBin) / (eneMaxBin - eneMinBin) * (energy - eneMinBin) + flxMinBin;
 }
 
 
