@@ -12,6 +12,11 @@ const String CR_P_INPUT   = "./data/GALPROP_p.txt";
 //////////////////////////////////////////////////////////////////
 int main( int argc, char** argv )
 {
+    clock_t start = clock( );
+
+    time_t t = time( nullptr );
+    printf("%s", ctime(&t));//time to start
+
     if( argc != 6 ) {
         std::cerr << "INPUT ERROR" << std::endl;
         std::cerr << "./SimDMVelocity [l.o.s. (kpc)] [DM mass (GeV)] [profile (NFW or IT or EIN)] [The number of events] [output filename]" << std::endl;
@@ -41,13 +46,13 @@ int main( int argc, char** argv )
 
     TF3* pFunc = nullptr;
     if( profile == "NFW" ) {
-        pFunc = new TF3( "flux", getDMNFWFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
+        pFunc = new TF3( "flux", getDMNFWFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT/* * 0.1*/, 8, 3 );
     }
     else if( profile == "IT" ) {
-        pFunc = new TF3( "flux", getDMIsoThermalFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
+        pFunc = new TF3( "flux", getDMIsoThermalFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT/* * 0.1*/, 8, 3 );
     }
     else if( profile == "EIN" ) {
-        pFunc = new TF3( "flux", getDMEinastoFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
+        pFunc = new TF3( "flux", getDMEinastoFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT/* * 0.1*/, 8, 3 );
     }
 
     pFunc->SetParameter( 0, PROTON_MASS       );
@@ -58,11 +63,16 @@ int main( int argc, char** argv )
     pFunc->SetParameter( 5, DM_R_SCALE        );
     pFunc->SetParameter( 6, SUN_DISTANCE      );
     pFunc->SetParameter( 7, LAMBDA_P          );
-    double totValue = PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT );
+    pFunc->SetNpx(50);
+    pFunc->SetNpy(50);
+    pFunc->SetNpz(50);
 
-    pFunc->SetNpx(100);
-    pFunc->SetNpy(100);
-    pFunc->SetNpz(100);
+    double totValue = PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT);
+
+    // default size
+    pFunc->SetNpx(36);
+    pFunc->SetNpy(72);
+    pFunc->SetNpz(1200);
 
     gRandom->SetSeed( 0 );
 
@@ -97,6 +107,18 @@ int main( int argc, char** argv )
     }
 
     pTree->Write( );
+
+    clock_t stop = clock( );
+
+    DEBUG((stop-start)/ static_cast< const float >( CLOCKS_PER_SEC));
+    DEBUG(totValue);
+
+    std::cout << "[0.0,  0.1c]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0,         V_LIGHT*0.1 ) << std::endl;
+    std::cout << "[0.0,  0.2c]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0,         V_LIGHT*0.2 ) << std::endl;
+    std::cout << "[0.1c, 0.2c]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), V_LIGHT*0.1, V_LIGHT*0.2 ) << std::endl;
+    std::cout << "[0.1c, c   ]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), V_LIGHT*0.1, V_LIGHT     ) << std::endl;
+    std::cout << "[0.2c, c   ]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), V_LIGHT*0.2, V_LIGHT     ) << std::endl;
+    std::cout << "[0.0,  c   ]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0,         V_LIGHT     ) << std::endl;
 
     return 0;
 }
