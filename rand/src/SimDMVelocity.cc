@@ -14,8 +14,8 @@ int main( int argc, char** argv )
 {
     clock_t start = clock( );
 
-    // time_t t = time( nullptr );
-    // printf("%s", ctime(&t));//time to start
+    time_t t = time( nullptr );
+    printf("%s", ctime(&t));//time to start
 
     if( argc != 6 ) {
         std::cerr << "INPUT ERROR" << std::endl;
@@ -46,13 +46,13 @@ int main( int argc, char** argv )
 
     TF3* pFunc = nullptr;
     if( profile == "NFW" ) {
-        pFunc = new TF3( "flux", getDMNFWFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
+        pFunc = new TF3( "flux", getDMNFWFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT/* * 0.1*/, 8, 3 );
     }
     else if( profile == "IT" ) {
-        pFunc = new TF3( "flux", getDMIsoThermalFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
+        pFunc = new TF3( "flux", getDMIsoThermalFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT/* * 0.1*/, 8, 3 );
     }
     else if( profile == "EIN" ) {
-        pFunc = new TF3( "flux", getDMEinastoFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT, 8, 3 );
+        pFunc = new TF3( "flux", getDMEinastoFluxV, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT/* * 0.1*/, 8, 3 );
     }
 
     pFunc->SetParameter( 0, PROTON_MASS       );
@@ -63,11 +63,16 @@ int main( int argc, char** argv )
     pFunc->SetParameter( 5, DM_R_SCALE        );
     pFunc->SetParameter( 6, SUN_DISTANCE      );
     pFunc->SetParameter( 7, LAMBDA_P          );
-    double totValue = PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT );
+    pFunc->SetNpx(50);
+    pFunc->SetNpy(50);
+    pFunc->SetNpz(50);
 
-    pFunc->SetNpx(20);
-    pFunc->SetNpy(20);
-    pFunc->SetNpz(20);
+    double totValue = PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT);
+
+    // default size
+    // pFunc->SetNpx(36);
+    // pFunc->SetNpy(72);
+    // pFunc->SetNpz(1200);
 
     gRandom->SetSeed( 0 );
 
@@ -106,7 +111,23 @@ int main( int argc, char** argv )
     clock_t stop = clock( );
 
     DEBUG((stop-start)/ static_cast< const float >( CLOCKS_PER_SEC));
+    DEBUG(totValue);
     // printf("%s", ctime(&t));//time to finish calc.
+
+    // TCanvas cvs( "cvs", "cvs", 800, 600 );
+    // cvs.SetLogx(1);
+    // cvs.SetLogy(1);
+    // cvs.SetLogz(1);
+    // pFunc->Draw("box");
+    // cvs.SaveAs("test.png");
+    // DEBUG(pFunc->Eval(0.0001, 0.0001, 0.9));
+
+    std::cout << "[0.0,  0.1c]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0,         V_LIGHT*0.1 ) << std::endl;
+    std::cout << "[0.0,  0.2c]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0,         V_LIGHT*0.2 ) << std::endl;
+    std::cout << "[0.1c, 0.2c]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), V_LIGHT*0.1, V_LIGHT*0.2 ) << std::endl;
+    std::cout << "[0.1c, c   ]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), V_LIGHT*0.1, V_LIGHT     ) << std::endl;
+    std::cout << "[0.2c, c   ]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), V_LIGHT*0.2, V_LIGHT     ) << std::endl;
+    std::cout << "[0.0,  c   ]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0,         V_LIGHT     ) << std::endl;
 
     return 0;
 }

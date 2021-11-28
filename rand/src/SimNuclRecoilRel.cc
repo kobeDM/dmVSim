@@ -65,13 +65,14 @@ int main( int argc, char** argv )
 
     std::cout << "Select randomizer: " << gRandom->GetName( ) << std::endl;
 
-    if( argc != 3 ) {
+    if( argc != 4 ) {
         std::cerr << "INPUT ERROR" << std::endl;
-        std::cerr << "./SimNuclRecoilRel [input filename] [output filename]" << std::endl;
+        std::cerr << "./SimNuclRecoilRel [target atom: 0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag] [input filename] [output filename]" << std::endl;
         abort( );
     }
-    String input  = argv[1];
-    String output = argv[2];
+    int    atom   = std::stoi(argv[1]);
+    String input  = argv[2];
+    String output = argv[3];
     
     double sysRelativeV = 0.0;
     double dmFinVCom  = 0.0;
@@ -118,7 +119,7 @@ int main( int argc, char** argv )
 
     double mandelS = 0.0, mandelT = 0.0, mandelU = 0.0;
     
-    int group = 0;
+    // int group = 0;
     double nuMList[15] = { };
 
     //SI
@@ -130,13 +131,23 @@ int main( int argc, char** argv )
 
     //SD
     nuMList[10]=0.932*19.;                            // F
+    nuMList[12]=0.932*1.;                             // H
 
-    FILE* fp1  = fopen("data/dist_blue10GeV.dat", "wt");         //output file
-    FILE* fp2  = fopen("data/output2_dist_blue10GeV.dat", "wt"); //output file
-    int   atom = 10; // fixed to fluorine
-    printf("atom is %d (0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag)\n",atom);
+
+    double spinFactorList[15] = { };
+
+    //SD
+    spinFactorList[3] =0.007;                          // I
+    spinFactorList[10]=0.647;                          // F
+    spinFactorList[12]=0.750;                          // H
+
+    // FILE* fp1  = fopen("data/dist_blue10GeV.dat", "wt");         //output file
+    // FILE* fp2  = fopen("data/output2_dist_blue10GeV.dat", "wt"); //output file
+    // int   atom = 10; // fixed to fluorine
+    printf("atom is %d (0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag, 12=p)\n",atom);
 
     double nuM = nuMList[ atom ];
+    double spinFactor = spinFactorList[ atom ];
 
     // open input file
     TFile inputFile( input.c_str( ) );
@@ -148,17 +159,35 @@ int main( int argc, char** argv )
 
     double velocity = 0.0, theta = 0.0, phi = 0.0;
     double dmM = 10.0;
-    pInTree->SetBranchAddress( "velocity", &velocity );
-    pInTree->SetBranchAddress( "theta",    &theta    );
-    pInTree->SetBranchAddress( "phi",      &phi      );
-    pInTree->SetBranchAddress( "dmM",      &dmM      );
+    double invWeight = 1.0;
+    pInTree->SetBranchAddress( "velocity",  &velocity  );
+    pInTree->SetBranchAddress( "theta",     &theta     );
+    pInTree->SetBranchAddress( "phi",       &phi       );
+    pInTree->SetBranchAddress( "dmM",       &dmM       );
+    pInTree->SetBranchAddress( "invWeight", &invWeight );
+
+    double massNumber = nuM / 0.932;
+    double muN = dmM * nuM / ( dmM + nuM);
+    double mup = dmM * nuMList[12] / ( dmM + nuMList[12]);
+
+    // calculate weight
+    double convFactorPerKg = 6.02e+23 / massNumber * 1e+3;
+    double totalRateSI = invWeight * 1e-30 * muN / mup * massNumber * massNumber * convFactorPerKg * 60.0 * 60.0 * 24.0;  // 1/kg/day
+    double totalRateSD = invWeight * 1e-30 * muN / mup * spinFactor / 0.75 * convFactorPerKg * 60.0 * 60.0 * 24.0;        // 1/kg/day
     
     // open output file
     TFile outputFile( output.c_str( ), "RECREATE" );
     TTree* pOutTree = new TTree( "tree", "tree" );
+    pInTree->SetDirectory( &inputFile );
     pOutTree->SetDirectory( &outputFile );
     pOutTree->Branch( "dmM",              &dmM               );
     pOutTree->Branch( "nuM",              &nuM               );
+    pOutTree->Branch( "muN",              &muN               );
+    pOutTree->Branch( "mup",              &mup               );
+    pOutTree->Branch( "massNumber",       &massNumber        );
+    pOutTree->Branch( "totalRateSI",      &totalRateSI       ); // 1/kg/day
+    pOutTree->Branch( "totalRateSD",      &totalRateSD       ); // 1/kg/day
+
     pOutTree->Branch( "atom",             &atom              );
     pOutTree->Branch( "dmInjV_debug",     &velocity          );
     pOutTree->Branch( "dmInjV",           &dmInitVExp        );
@@ -211,7 +240,6 @@ int main( int argc, char** argv )
     pOutTree->Branch( "scatThetaCom",     &scatThetaCom      );
     pOutTree->Branch( "cosScatThetaCom",  &cosScatThetaCom   );
     pOutTree->Branch( "dmMomCom",         &dmMomCom          );
-    
                                                               
     pOutTree->Branch( "beta",             &beta              );
     pOutTree->Branch( "gamma",            &gamma             );
@@ -222,6 +250,7 @@ int main( int argc, char** argv )
     pOutTree->Branch( "mandelS",          &mandelS           );
     pOutTree->Branch( "mandelT",          &mandelT           );
     pOutTree->Branch( "mandelU",          &mandelU           );
+    pOutTree->Branch( "invWeight",        &invWeight         );
 
     int totEvt = pInTree->GetEntries( );
     for( int evt = 0; evt < totEvt; ++evt ) {
@@ -286,14 +315,14 @@ int main( int argc, char** argv )
         
         rndm = gRandom->Rndm( );
         formFactorSq = getFormFactorSq( nuRecoilE, atom );
-        if( rndm <= formFactorSq ) {
-            group = 1;
-            fprintf(fp1,"%d %d %lf %lf %lf %lf\n",
-                    group, atom, dmM, nuCosScatThetaExp, nuSinScatPhiExp, nuRecoilE );
-            //1     2     3    4    5                    6
-            fprintf(fp2,"%lf %lf %lf %lf %lf\n",
-                    dmInitVExpVec.X( ), dmInitVExpVec.Y( ), dmInitVExpVec.Z( ), nuM, nuFinVExp );
-        }
+        // if( rndm <= formFactorSq ) {
+        //     group = 1;
+        //     fprintf(fp1,"%d %d %lf %lf %lf %lf\n",
+        //             group, atom, dmM, nuCosScatThetaExp, nuSinScatPhiExp, nuRecoilE );
+        //     //1     2     3    4    5                    6
+        //     fprintf(fp2,"%lf %lf %lf %lf %lf\n",
+        //             dmInitVExpVec.X( ), dmInitVExpVec.Y( ), dmInitVExpVec.Z( ), nuM, nuFinVExp );
+        // }
         pOutTree->Fill( );
 
     }//end of event number loop
@@ -302,8 +331,8 @@ int main( int argc, char** argv )
 
     printf("\n");
     printf("%s", ctime(&t));//time to finish calc.
-    fclose(fp1);
-    fclose(fp2);
+    // fclose(fp1);
+    // fclose(fp2);
 
     return 0;
 }
@@ -445,6 +474,7 @@ double getFormFactorSq( const double& ER, const int& atom )
     if( atom == 3  ) A = 126.90;   //I //both for SD, SI
     if( atom == 10 ) A = 18.998;   //F
     if( atom == 11 ) A = 107.8682; //Ag
+    if( atom == 12 ) A = 1.0;      //H
 
     double a  = 0.52;
     double s  = 0.9;
