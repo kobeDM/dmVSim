@@ -70,9 +70,9 @@ int main( int argc, char** argv )
     double totValue = PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, V_LIGHT);
 
     // default size
-    // pFunc->SetNpx(36);
-    // pFunc->SetNpy(72);
-    // pFunc->SetNpz(1200);
+    pFunc->SetNpx(36);
+    pFunc->SetNpy(72);
+    pFunc->SetNpz(1200);
 
     gRandom->SetSeed( 0 );
 
@@ -112,15 +112,6 @@ int main( int argc, char** argv )
 
     DEBUG((stop-start)/ static_cast< const float >( CLOCKS_PER_SEC));
     DEBUG(totValue);
-    // printf("%s", ctime(&t));//time to finish calc.
-
-    // TCanvas cvs( "cvs", "cvs", 800, 600 );
-    // cvs.SetLogx(1);
-    // cvs.SetLogy(1);
-    // cvs.SetLogz(1);
-    // pFunc->Draw("box");
-    // cvs.SaveAs("test.png");
-    // DEBUG(pFunc->Eval(0.0001, 0.0001, 0.9));
 
     std::cout << "[0.0,  0.1c]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0,         V_LIGHT*0.1 ) << std::endl;
     std::cout << "[0.0,  0.2c]:\t" << PC2CM*PC2CM*pFunc->Integral( -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0,         V_LIGHT*0.2 ) << std::endl;
