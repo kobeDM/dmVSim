@@ -51,6 +51,25 @@ double getDMNFWFlux    ( double* x,
 double getDMNFWFluxV   ( double* x,
                          double* par );
 
+
+double getDMFluxEn( double pM,
+                    double dmE,
+                    double dmM,
+                    double dmXS,
+                    double lambdaP );
+double getDMFluxEn( double* x,
+                    double* par );
+
+double getDMNFWFluxDir( double theta,
+                        double phi,
+                        double los,
+                        double dmDScale,
+                        double dmRScale,
+                        double sunDist );
+
+double getDMNFWFluxDir( double* x,
+                        double* par );
+
 double getDMIsoThermalFlux    ( double theta,
                                 double phi,
                                 double los,
@@ -66,6 +85,18 @@ double getDMIsoThermalFlux    ( double* x,
                                 double* par );
 double getDMIsoThermalFluxV   ( double* x,
                                 double* par );
+
+
+double getDMIsoThermalFluxDir( double theta,
+                               double phi,
+                               double los,
+                               double dmDScale,
+                               double dmRScale,
+                               double sunDist );
+
+double getDMIsoThermalFluxDir( double* x,
+                               double* par );
+
 
 double getDMEinastoFlux    ( double theta,
                              double phi,
@@ -83,6 +114,21 @@ double getDMEinastoFlux    ( double* x,
 double getDMEinastoFluxV   ( double* x,
                              double* par );
 
-void   printProgressBar( const int& index, const int& total );
+double getDMEinastoFluxDir( double theta,
+                            double phi,
+                            double los,
+                            double dmDScale,
+                            double dmRScale,
+                            double sunDist );
+
+double getDMEinastoFluxDir( double* x,
+                            double* par );
+
+
+void   printProgressBar    ( const int& index, const int& total );
+
+double getVelocity         ( double* xCDF,
+                             double* yCDF,
+                             const double& rndUni );
 
 #endif // CRDM_FUNC_H

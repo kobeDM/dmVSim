@@ -104,11 +104,11 @@ double getTIntegral( double pM,
 {
     if( pM < 0.0 || dmE < 0.0 || dmM < 0.0 ) return -100.0;
     
-    TF1 func( "TInt", getTMaxInv, getTMin( pM, dmE, dmM ), 10000000.0, 2, 1 );
+    TF1 func( "TInt", getTMaxInv, getTMin( pM, dmE, dmM ), 1000000000.0, 2, 1 );
     func.SetParameter( 0, pM );
     func.SetParameter( 1, dmM );
 
-    return func.Integral( getTMin( pM, dmE, dmM ), 10000000.0 );
+    return func.Integral( getTMin( pM, dmE, dmM ), 1000000000.0 );
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -186,6 +186,74 @@ double getDMNFWFluxV( double* x,
     return flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
 }
 
+// test
+double getDMFluxEn( double pM,
+                    double dmE,
+                    double dmM,
+                    double dmXS,
+                    double lambdaP )
+{
+    if( pM < 0.0 || dmE < 0.0 || dmM < 0.0 || dmXS < 0.0 )
+        return -100.0;
+
+    double TIntegral = getTIntegral( pM, dmE, dmM );
+    double formFactor = 1.0 / pow( 1.0 + (2.0 * dmM * dmE) / (lambdaP*lambdaP), 2 );
+
+    return TIntegral * dmXS / dmM * formFactor * formFactor;
+}
+
+double getDMFluxEn( double* x,
+                    double* par )
+{
+    double velo     = x[0];
+    double pM       = par[0];
+    double dmM      = par[1];
+    double dmXS     = par[2];
+    double lambdaP  = par[3];
+
+    double gamma    = 1.0 / sqrt( 1 - pow( velo / V_LIGHT , 2) );
+    double dmE      = dmM * (gamma - 1.0);
+
+    double flux = getDMFluxEn( pM, dmE, dmM, dmXS, lambdaP );
+    return flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
+}
+
+
+double getDMNFWFluxDir( double theta,
+                        double phi,
+                        double los,
+                        double dmDScale,
+                        double dmRScale,
+                        double sunDist )
+{
+    if( dmDScale < 0.0 || dmRScale < 0.0 || sunDist < 0.0 ) return -100.0;
+
+    double cosTheta = cos( theta );
+    double cosPhi   = cos( phi );
+    double rsq      = los*los + sunDist*sunDist - 2*los*sunDist*cosTheta*cosPhi;
+    double r        = sqrt( fabs( rsq ) );
+
+    double relR     = r / dmRScale;
+    double rhoNFW   = dmDScale / (relR*pow( 1 + relR, 2 ));
+    double jacobian = los*los; // Note: This jacobian should only affect the los. Do not add cosTheta!!!
+    double fluxCorr = 1.0 / (4.0*TMath::Pi()*los*los);
+
+    return fluxCorr * jacobian * rhoNFW;
+}
+
+double getDMNFWFluxDir( double* x,
+                       double* par )
+{
+    double theta    = x[0];
+    double phi      = x[1];
+    double los      = par[0];
+    double dmDScale = par[1];
+    double dmRScale = par[2];
+    double sunDist  = par[3];
+
+    return getDMNFWFluxDir( theta, phi, los, dmDScale, dmRScale, sunDist );
+}
+
 /////////////////////////////////////////////////////////////////////////
 // Iso-thermal profile
 /////////////////////////////////////////////////////////////////////////
@@ -259,6 +327,42 @@ double getDMIsoThermalFluxV( double* x,
 
     double flux = getDMIsoThermalFlux( theta, phi, los, pM, dmE, dmM, dmXS, dmDScale, dmRScale, sunDist, lambdaP );
     return flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
+}
+
+
+double getDMIsoThermalFluxDir( double theta,
+                               double phi,
+                               double los,
+                               double dmDScale,
+                               double dmRScale,
+                               double sunDist )
+{
+    if( dmDScale < 0.0 || dmRScale < 0.0 || sunDist < 0.0 ) return -100.0;
+
+    double cosTheta = cos( theta );
+    double cosPhi   = cos( phi );
+    double rsq      = los*los + sunDist*sunDist - 2*los*sunDist*cosTheta*cosPhi;
+    double r        = sqrt( fabs( rsq ) );
+
+    double relR     = r / dmRScale;
+    double rhoIsoThermal   = dmDScale / ( 1.0 + pow( relR, 2 ) );
+    double jacobian = los*los; // Note: This jacobian should only affect the los. Do not add cosTheta!!!
+    double fluxCorr = 1.0 / (4.0*TMath::Pi()*los*los);
+
+    return fluxCorr * jacobian * rhoIsoThermal;
+}
+
+double getDMIsoThermalFluxDir( double* x,
+                               double* par )
+{
+    double theta    = x[0];
+    double phi      = x[1];
+    double los      = par[0];
+    double dmDScale = par[1];
+    double dmRScale = par[2];
+    double sunDist  = par[3];
+
+    return getDMIsoThermalFluxDir( theta, phi, los, dmDScale, dmRScale, sunDist );
 }
 
 
@@ -338,6 +442,42 @@ double getDMEinastoFluxV( double* x,
 }
 
 
+double getDMEinastoFluxDir( double theta,
+                            double phi,
+                            double los,
+                            double dmDScale,
+                            double dmRScale,
+                            double sunDist )
+{
+    if( dmDScale < 0.0 || dmRScale < 0.0 || sunDist < 0.0 ) return -100.0;
+
+    double cosTheta = cos( theta );
+    double cosPhi   = cos( phi );
+    double rsq      = los*los + sunDist*sunDist - 2*los*sunDist*cosTheta*cosPhi;
+    double r        = sqrt( fabs( rsq ) );
+
+    double relR     = r / dmRScale;
+    double rhoEinasto   = dmDScale * exp( -2.0 * ( pow( relR, EIN_ALPHA ) - 1.0 ) / EIN_ALPHA );
+    double jacobian = los*los; // Note: This jacobian should only affect the los. Do not add cosTheta!!!
+    double fluxCorr = 1.0 / (4.0*TMath::Pi()*los*los);
+
+    return fluxCorr * jacobian * rhoEinasto;
+}
+
+double getDMEinastoFluxDir( double* x,
+                            double* par )
+{
+    double theta    = x[0];
+    double phi      = x[1];
+    double los      = par[0];
+    double dmDScale = par[1];
+    double dmRScale = par[2];
+    double sunDist  = par[3];
+
+    return getDMEinastoFluxDir( theta, phi, los, dmDScale, dmRScale, sunDist );
+}
+
+
 
 void   printProgressBar( const int& index, const int& total )
 {
@@ -361,3 +501,28 @@ void   printProgressBar( const int& index, const int& total )
     return;
 }
 
+double getVelocity( double* xCDF, double* yCDF, const double& rndUni )
+{
+    if( xCDF == nullptr || yCDF == nullptr ) return -1.0;
+    
+    double retVal = 0.0;
+    double x1 = 0.0, x2 = 0.0;
+    double y1 = 0.0, y2 = 0.0;
+    if( rndUni < yCDF[0]    ) return retVal;
+    if( rndUni > yCDF[99999] ) return xCDF[99999];
+
+    for( int i = 0; i < 100000; ++i ) {
+        if( rndUni < yCDF[i] ) {
+            // linear compensation
+            x1 = xCDF[i-1];
+            x2 = xCDF[i];
+            y1 = yCDF[i-1];
+            y2 = yCDF[i];
+
+            retVal = x1 + (rndUni - y1) * (x2 - x1) / (y2 - y1);
+            break;
+        }
+    }
+    
+    return retVal;
+}
