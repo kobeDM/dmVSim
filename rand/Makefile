@@ -9,7 +9,7 @@ ROOTLIBS = $(shell root-config --libs)
 
 RLIB = -I${INCLUDE} -I./ShUtil
 
-TARGET = LNATrand SimDMFlux SimNuclRecoil SimNuclRecoilRel SimDMVelocity SimDMVelocityEx
+TARGET = LNATrand SimDMFlux SimNuclRecoil SimDMVelocity
 
 all:	${TARGET}
 
@@ -21,10 +21,6 @@ SimDMVelocity: ${SRC}/SimDMVelocity.o ${SRC}/CRDMFunc.o
 	g++ ${CXXFLAGS} -o SimDMVelocity ${SRC}/SimDMVelocity.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
 	mv ./SimDMVelocity ${LD_PATH}
 
-SimDMVelocityEx: ${SRC}/SimDMVelocityEx.o ${SRC}/CRDMFunc.o
-	g++ ${CXXFLAGS} -o SimDMVelocityEx ${SRC}/SimDMVelocityEx.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
-	mv ./SimDMVelocityEx ${LD_PATH}
-
 SimDMFlux: ${SRC}/SimDMFlux.o ${SRC}/CRDMFunc.o
 	g++ ${CXXFLAGS} -o SimDMFlux ${SRC}/SimDMFlux.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
 	mv ./SimDMFlux ${LD_PATH}
@@ -32,10 +28,6 @@ SimDMFlux: ${SRC}/SimDMFlux.o ${SRC}/CRDMFunc.o
 SimNuclRecoil: ${SRC}/SimNuclRecoil.o ${SRC}/CRDMFunc.o
 	g++ ${CXXFLAGS} -o SimNuclRecoil ${SRC}/SimNuclRecoil.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
 	mv ./SimNuclRecoil ${LD_PATH}
-
-SimNuclRecoilRel: ${SRC}/SimNuclRecoilRel.o ${SRC}/CRDMFunc.o
-	g++ ${CXXFLAGS} -o SimNuclRecoilRel ${SRC}/SimNuclRecoilRel.o ${SRC}/CRDMFunc.o ${ROOTLIBS} -lgcc
-	mv ./SimNuclRecoilRel ${LD_PATH}
 
 %.o: %.cc
 	g++ ${CXXFLAGS} ${RLIB} -O4 -c -o $@ $<

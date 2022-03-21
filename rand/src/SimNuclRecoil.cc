@@ -33,17 +33,9 @@ double   getNuFinVExp     ( const double& dmInitVExp,
 double   getRecoilEnergy  ( const double& nuM,
                             const double& nuVExp );
 
-// double   getRotAngleAlpha ( TVector3      dmInitVExpVec );
-
-// double   getRotAngleBeta  ( TVector3      dmInitVExpVec );
-
 double   getRotAngleBeta  ( TVector3      dmInitVExpVec );
 
 double   getRotAngleGamma ( TVector3      dmInitVExpVec );
-
-// TVector3 rotation         ( TVector3      u,
-//                             const double& al,
-//                             const double& be );
 
 TVector3 rotation         ( TVector3      u,
                             const double& be,
@@ -73,13 +65,14 @@ int main( int argc, char** argv )
 
     std::cout << "Select randomizer: " << gRandom->GetName( ) << std::endl;
 
-    if( argc != 3 ) {
+    if( argc != 4 ) {
         std::cerr << "INPUT ERROR" << std::endl;
-        std::cerr << "./SimNuclRecoil [input filename] [output filename]" << std::endl;
+        std::cerr << "./SimNuclRecoilRel [target atom: 0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag] [input filename] [output filename]" << std::endl;
         abort( );
     }
-    String input  = argv[1];
-    String output = argv[2];
+    int    atom   = std::stoi(argv[1]);
+    String input  = argv[2];
+    String output = argv[3];
     
     double sysRelativeV = 0.0;
     double dmFinVCom  = 0.0;
@@ -89,6 +82,7 @@ int main( int argc, char** argv )
     double nuFinVExp  = 0.0, nuFinVExpX  = 0.0, nuFinVExpY  = 0.0 , nuFinVExpZ  = 0.0;
 
     double nuFinVTmpExp  = 0.0, nuFinVTmpExpX  = 0.0, nuFinVTmpExpY  = 0.0 , nuFinVTmpExpZ  = 0.0;
+    double nuFinETmpExp  = 0.0, nuFinMomTmpExp  = 0.0;
 
     double scatThetaCom    = 0.0;
     double cosScatThetaCom = 0.0;
@@ -107,10 +101,13 @@ int main( int argc, char** argv )
     double dmSinScatPhiTmpExp    = 0.0, nuSinScatPhiTmpExp   = 0.0;
     double dmCosScatPhiTmpExp    = 0.0, nuCosScatPhiTmpExp   = 0.0;
 
+    double dmGamma = 0.0;
+    double dmMomTmpExp = 0.0, dmETmpExp = 0.0;
+    double dmMomCom = 0.0;
+
     double nuRecoilE    = 0.0;
     double formFactorSq = 0.0;
 
-    // double alpha = 0.0, beta = 0.0;
     double beta = 0.0, gamma = 0.0;
 
     TVector3 dmInitVExpVec;
@@ -119,27 +116,38 @@ int main( int argc, char** argv )
     TVector3 nuFinVExpVec;
 
     double rndm = 0.0;
+
+    double mandelS = 0.0, mandelT = 0.0, mandelU = 0.0;
     
-    int group = 0;
+    // int group = 0;
     double nuMList[15] = { };
 
     //SI
-    nuMList[0]=0.932*(0.989*12.+0.011*13);//C
-    nuMList[1]=0.932*(0.950*32.+0.008*33.+0.042*34.);//S
-    nuMList[2]=0.932*(0.5069*79.+0.4931*81.);//Br
-    nuMList[3]=0.932*127.;//I
-    nuMList[11]=0.932*(0.5184*107.+0.48161*109.);//Ag
-    //SD
-    nuMList[10]=0.932*19.;//F
+    nuMList[0]=0.932*(0.989*12.+0.011*13);            // C
+    nuMList[1]=0.932*(0.950*32.+0.008*33.+0.042*34.); // S
+    nuMList[2]=0.932*(0.5069*79.+0.4931*81.);         // Br
+    nuMList[3]=0.932*127.;                            // I
+    nuMList[11]=0.932*(0.5184*107.+0.48161*109.);     // Ag
 
-    FILE* fp1 = fopen("data/dist_blue10GeV.dat", "wt");//output file
-    FILE* fp2 = fopen("data/output2_dist_blue10GeV.dat", "wt");//output file
-    int atom = 10;//here
-    printf("atom is %d (0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag)\n",atom);
+    //SD
+    nuMList[10]=0.932*19.;                            // F
+    nuMList[12]=0.932*1.;                             // H
+
+
+    double spinFactorList[15] = { };
+
+    //SD
+    spinFactorList[3] =0.007;                          // I
+    spinFactorList[10]=0.647;                          // F
+    spinFactorList[12]=0.750;                          // H
+
+    // FILE* fp1  = fopen("data/dist_blue10GeV.dat", "wt");         //output file
+    // FILE* fp2  = fopen("data/output2_dist_blue10GeV.dat", "wt"); //output file
+    // int   atom = 10; // fixed to fluorine
+    printf("atom is %d (0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag, 12=p)\n",atom);
 
     double nuM = nuMList[ atom ];
-    double dmM = 10.;//DM mass
-    // printf("dmM=%5.1f #event=10^%2.0lf\n", dmM, log10f(snum));
+    double spinFactor = spinFactorList[ atom ];
 
     // open input file
     TFile inputFile( input.c_str( ) );
@@ -150,16 +158,36 @@ int main( int argc, char** argv )
     }
 
     double velocity = 0.0, theta = 0.0, phi = 0.0;
-    pInTree->SetBranchAddress( "velocity", &velocity );
-    pInTree->SetBranchAddress( "theta",    &theta    );
-    pInTree->SetBranchAddress( "phi",      &phi      );
+    double dmM = 10.0;
+    double invWeight = 1.0;
+    pInTree->SetBranchAddress( "velocity",  &velocity  );
+    pInTree->SetBranchAddress( "theta",     &theta     );
+    pInTree->SetBranchAddress( "phi",       &phi       );
+    pInTree->SetBranchAddress( "dmM",       &dmM       );
+    pInTree->SetBranchAddress( "invWeight", &invWeight );
+
+    double massNumber = nuM / 0.932;
+    double muN = dmM * nuM / ( dmM + nuM);
+    double mup = dmM * nuMList[12] / ( dmM + nuMList[12]);
+
+    // calculate weight
+    double convFactorPerKg = 6.02e+23 / massNumber * 1e+3;
+    double totalRateSI = invWeight * 1e-30 * muN / mup * massNumber * massNumber * convFactorPerKg * 60.0 * 60.0 * 24.0;  // 1/kg/day
+    double totalRateSD = invWeight * 1e-30 * muN / mup * spinFactor / 0.75 * convFactorPerKg * 60.0 * 60.0 * 24.0;        // 1/kg/day
     
     // open output file
     TFile outputFile( output.c_str( ), "RECREATE" );
     TTree* pOutTree = new TTree( "tree", "tree" );
+    pInTree->SetDirectory( &inputFile );
     pOutTree->SetDirectory( &outputFile );
     pOutTree->Branch( "dmM",              &dmM               );
     pOutTree->Branch( "nuM",              &nuM               );
+    pOutTree->Branch( "muN",              &muN               );
+    pOutTree->Branch( "mup",              &mup               );
+    pOutTree->Branch( "massNumber",       &massNumber        );
+    pOutTree->Branch( "totalRateSI",      &totalRateSI       ); // 1/kg/day
+    pOutTree->Branch( "totalRateSD",      &totalRateSD       ); // 1/kg/day
+
     pOutTree->Branch( "atom",             &atom              );
     pOutTree->Branch( "dmInjV_debug",     &velocity          );
     pOutTree->Branch( "dmInjV",           &dmInitVExp        );
@@ -168,6 +196,10 @@ int main( int argc, char** argv )
     pOutTree->Branch( "dmInjVZ",          &dmInitVExpZ       );
     pOutTree->Branch( "dmInjTheta",       &theta             );
     pOutTree->Branch( "dmInjPhi",         &phi               );
+
+    pOutTree->Branch( "dmInGamma",        &dmGamma           );
+    pOutTree->Branch( "dmInMomTmpExp",    &dmMomTmpExp       );
+    pOutTree->Branch( "dmInETmpExp",      &dmETmpExp         );
 
     pOutTree->Branch( "dmOutPhiTmpExp",   &dmScatPhiTmpExp   );
     pOutTree->Branch( "dmOutThetaTmpExp", &dmScatThetaTmpExp );
@@ -181,6 +213,8 @@ int main( int argc, char** argv )
     pOutTree->Branch( "nuRecVTmpExpX",    &nuFinVTmpExpX  );
     pOutTree->Branch( "nuRecVTmpExpY",    &nuFinVTmpExpY  );
     pOutTree->Branch( "nuRecVTmpExpZ",    &nuFinVTmpExpZ  );
+    pOutTree->Branch( "nuRecETmpExp",     &nuFinETmpExp   );
+    pOutTree->Branch( "nuRecMomTmpExp",   &nuFinMomTmpExp   );
 
     pOutTree->Branch( "dmOutV",           &dmFinVExp         );
     pOutTree->Branch( "dmOutVX",          &dmFinVExpX        );
@@ -205,74 +239,65 @@ int main( int argc, char** argv )
 
     pOutTree->Branch( "scatThetaCom",     &scatThetaCom      );
     pOutTree->Branch( "cosScatThetaCom",  &cosScatThetaCom   );
+    pOutTree->Branch( "dmMomCom",         &dmMomCom          );
                                                               
-    // pOutTree->Branch( "alpha",            &alpha             );
-    // pOutTree->Branch( "beta",             &beta              );
     pOutTree->Branch( "beta",             &beta              );
     pOutTree->Branch( "gamma",            &gamma             );
     pOutTree->Branch( "formFactorSq",     &formFactorSq      );
 
     pOutTree->Branch( "rndm",             &rndm              );
 
+    pOutTree->Branch( "mandelS",          &mandelS           );
+    pOutTree->Branch( "mandelT",          &mandelT           );
+    pOutTree->Branch( "mandelU",          &mandelU           );
+    pOutTree->Branch( "invWeight",        &invWeight         );
+
     int totEvt = pInTree->GetEntries( );
     for( int evt = 0; evt < totEvt; ++evt ) {
         printProgressBar( evt, totEvt );
         pInTree->GetEntry( evt );
-        
+
         dmInitVExpVec = getDmVVec( velocity, theta, phi );
         dmInitVExpX   = dmInitVExpVec.X( );
         dmInitVExpY   = dmInitVExpVec.Y( );
         dmInitVExpZ   = dmInitVExpVec.Z( );
         dmInitVExp    = dmInitVExpVec.Mag( );
-        
-        sysRelativeV = dmM / (dmM + nuM) * dmInitVExp;
+
+        dmGamma = 1.0 / sqrt(1.0 - sq( dmInitVExp / V_LIGHT ) );
+        dmMomTmpExp = dmGamma * dmM * dmInitVExp / V_LIGHT;
+        dmETmpExp = sqrt( sq( dmMomTmpExp ) + sq( dmM ) );
+        mandelS = sq( sqrt( sq( dmM ) + sq( dmMomTmpExp ) ) + nuM ) - sq( dmMomTmpExp );
+        dmMomCom = sqrt( ( mandelS - sq( dmM - nuM ) ) * ( mandelS - sq( dmM + nuM ) )  ) / ( 2.0 * sqrt( mandelS ) );
+
         scatThetaCom = gRandom->Rndm( ) * 1.0 * PI;
         cosScatThetaCom = cos( scatThetaCom );
+        mandelT = -2.0 * dmMomCom * dmMomCom * ( 1.0 - cosScatThetaCom );
 
-        dmCosScatThetaTmpExp = getDmCosScatTheta( dmM, nuM, cosScatThetaCom );
-        dmSinScatThetaTmpExp = sqrt( 1.0 - sq( dmCosScatThetaTmpExp ) );
-        nuCosScatThetaTmpExp = getNuCosScatTheta( cosScatThetaCom );
-        nuSinScatThetaTmpExp = sqrt( 1.0 - sq( nuCosScatThetaTmpExp ) );
-        dmScatThetaTmpExp    = asin( dmSinScatThetaTmpExp );
-        nuScatThetaTmpExp    = asin( nuSinScatThetaTmpExp );
+        // calculate theta and E at a Lab'-frame
+        nuFinETmpExp = ( 2.0 * nuM * nuM - mandelT ) / ( 2.0 * nuM );
+        nuFinMomTmpExp = sqrt( sq( nuFinETmpExp ) - sq( nuM ) );
+        mandelU = 2.0 * pow( dmM, 2.0 ) + 2.0 * pow( nuM, 2.0 ) - mandelS - mandelT;
 
-        dmSinScatPhiTmpExp = getSinDmScatPhi( );
-        dmCosScatPhiTmpExp = sqrt( 1.0 - sq( dmSinScatPhiTmpExp ) );
-        dmScatPhiTmpExp    = asin( dmSinScatPhiTmpExp );
+        nuCosScatThetaTmpExp = ( mandelU - sq( dmM ) - sq( nuM ) + 2.0 * dmETmpExp * nuFinETmpExp ) / ( 2.0 * dmMomTmpExp * nuFinMomTmpExp );
+        nuSinScatThetaTmpExp = randomPM( ) * sqrt( 1.0 - sq( nuCosScatThetaTmpExp ) );
+        nuScatThetaTmpExp = asin( nuSinScatThetaTmpExp );
 
-        nuSinScatPhiTmpExp = sin( PI - dmScatPhiTmpExp );
-        nuCosScatPhiTmpExp = sqrt( 1.0 - sq( nuSinScatPhiTmpExp ) );
-        nuScatPhiTmpExp    = asin( nuSinScatPhiTmpExp );
+        nuScatPhiTmpExp = gRandom->Rndm( ) * 2.0 * PI;
+        nuSinScatPhiTmpExp = sin( nuScatPhiTmpExp );
+        nuCosScatPhiTmpExp = cos( nuScatPhiTmpExp );
 
-        dmFinVCom = nuM / ( dmM + nuM ) * dmInitVExp * gamFact( dmInitVExp );
-        dmFinVExp = getDmVExp( sysRelativeV, dmFinVCom, cosScatThetaCom, dmCosScatThetaTmpExp );
-        nuFinVExp = getNuFinVExp( dmInitVExp, dmFinVExp, dmM, nuM );
-
-        // nuFinVTmpExpVec.SetX( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuCosScatPhiTmpExp );
-        // nuFinVTmpExpVec.SetY( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuSinScatPhiTmpExp );
-        // nuFinVTmpExpVec.SetZ( randomPM( ) * nuFinVExp * nuCosScatThetaTmpExp                      );
-
-        // nuFinVTmpExpVec.SetX( nuFinVExp * nuSinScatThetaTmpExp * nuCosScatPhiTmpExp );
-        // nuFinVTmpExpVec.SetY( nuFinVExp * nuSinScatThetaTmpExp * nuSinScatPhiTmpExp );
-        // nuFinVTmpExpVec.SetZ( nuFinVExp * nuCosScatThetaTmpExp                      );
-
+        nuFinVExp = V_LIGHT * nuFinMomTmpExp / nuFinETmpExp;
         nuFinVTmpExpVec.SetY( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuCosScatPhiTmpExp );
         nuFinVTmpExpVec.SetZ( randomPM( ) * nuFinVExp * nuSinScatThetaTmpExp * nuSinScatPhiTmpExp );
         nuFinVTmpExpVec.SetX( nuFinVExp * nuCosScatThetaTmpExp                      );
-
 
         nuFinVTmpExpX = nuFinVTmpExpVec.X( );
         nuFinVTmpExpY = nuFinVTmpExpVec.Y( );
         nuFinVTmpExpZ = nuFinVTmpExpVec.Z( );
 
-        // alpha        = getRotAngleAlpha( dmInitVExpVec );
-        // beta         = getRotAngleBeta ( dmInitVExpVec );
-        // nuFinVExpVec = rotation( nuFinVTmpExpVec, alpha, beta );
-
         beta         = getRotAngleBeta ( dmInitVExpVec );
         gamma        = getRotAngleGamma( dmInitVExpVec );
         nuFinVExpVec = rotation( nuFinVTmpExpVec, beta, gamma );
-
 
         nuFinVExpX = nuFinVExpVec.X( );
         nuFinVExpY = nuFinVExpVec.Y( );
@@ -290,16 +315,14 @@ int main( int argc, char** argv )
         
         rndm = gRandom->Rndm( );
         formFactorSq = getFormFactorSq( nuRecoilE, atom );
-        if( rndm <= formFactorSq ) {
-            group = 1;
-            fprintf(fp1,"%d %d %lf %lf %lf %lf\n",
-                    group, atom, dmM, nuCosScatThetaExp, nuSinScatPhiExp, nuRecoilE );
-            //1     2     3    4    5                    6
-            fprintf(fp2,"%lf %lf %lf %lf %lf\n",
-                    dmInitVExpVec.X( ), dmInitVExpVec.Y( ), dmInitVExpVec.Z( ), nuM, nuFinVExp );
-
-            // pOutTree->Fill( );
-        }
+        // if( rndm <= formFactorSq ) {
+        //     group = 1;
+        //     fprintf(fp1,"%d %d %lf %lf %lf %lf\n",
+        //             group, atom, dmM, nuCosScatThetaExp, nuSinScatPhiExp, nuRecoilE );
+        //     //1     2     3    4    5                    6
+        //     fprintf(fp2,"%lf %lf %lf %lf %lf\n",
+        //             dmInitVExpVec.X( ), dmInitVExpVec.Y( ), dmInitVExpVec.Z( ), nuM, nuFinVExp );
+        // }
         pOutTree->Fill( );
 
     }//end of event number loop
@@ -308,8 +331,8 @@ int main( int argc, char** argv )
 
     printf("\n");
     printf("%s", ctime(&t));//time to finish calc.
-    fclose(fp1);
-    fclose(fp2);
+    // fclose(fp1);
+    // fclose(fp2);
 
     return 0;
 }
@@ -451,6 +474,7 @@ double getFormFactorSq( const double& ER, const int& atom )
     if( atom == 3  ) A = 126.90;   //I //both for SD, SI
     if( atom == 10 ) A = 18.998;   //F
     if( atom == 11 ) A = 107.8682; //Ag
+    if( atom == 12 ) A = 1.0;      //H
 
     double a  = 0.52;
     double s  = 0.9;
