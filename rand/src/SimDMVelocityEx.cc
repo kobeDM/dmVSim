@@ -13,14 +13,9 @@ const String CR_P_INPUT   = "./data/GALPROP_p.txt";
 //////////////////////////////////////////////////////////////////
 int main( int argc, char** argv )
 {
-    // clock_t start = clock( );
-
-    // time_t t = time( nullptr );
-    // printf("%s", ctime(&t));//time to start
-
     if( argc != 6 ) {
         std::cerr << "INPUT ERROR" << std::endl;
-        std::cerr << "./SimDMVelocity [l.o.s. (kpc)] [DM mass (GeV)] [profile (NFW or IT or EIN)] [The number of events] [output filename]" << std::endl;
+        std::cerr << "./SimDMVelocityEx [l.o.s. (kpc)] [DM mass (GeV)] [profile (NFW or IT or EIN)] [The number of events] [output filename]" << std::endl;
         abort( );
     }
 
@@ -42,17 +37,22 @@ int main( int argc, char** argv )
         abort( );
     }
     
-    double xsection = PC2CM*PC2CM*1e-30;
-    double rhoScaleKPC = DM_RHO_SCALE / ( PC2CM*PC2CM*PC2CM ); // converted to [GeV / kpc^3]
+    double xsection = 1e-30; // [cm^2]
+    double rhoScaleKPC = DM_RHO_SCALE * PC2CM * PC2CM * PC2CM; // [GeV/kpc^3]
 
+    // calculate integral of the dark matter flux
+    TF3* pFuncFlux = nullptr;
     TF2* pFuncDir = nullptr;
     if( profile == "NFW" ) {
+        pFuncFlux = new TF3( "flux", getDMNFWFluxInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 1e-8, 1e+12, 8, 3 );
         pFuncDir = new TF2( "fluxDir", getDMNFWFluxDir, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
     }
     else if( profile == "IT" ) {
+        pFuncFlux = new TF3( "flux", getDMIsoThermalFluxInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 1e-8, 1e+12, 8, 3 );
         pFuncDir = new TF2( "fluxDir", getDMIsoThermalFluxDir, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
     }
     else if( profile == "EIN" ) {
+        pFuncFlux = new TF3( "flux", getDMEinastoFluxInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 1e-8, 1e+12, 8, 3 );
         pFuncDir = new TF2( "fluxDir", getDMEinastoFluxDir, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
     }
 
@@ -64,12 +64,56 @@ int main( int argc, char** argv )
     pFuncEn->SetParameter( 3, LAMBDA_P          );
 
     pFuncDir->SetParameter( 0, los               );
-    pFuncDir->SetParameter( 1, rhoScaleKPC       );
+    pFuncDir->SetParameter( 1, DM_RHO_SCALE      );
     pFuncDir->SetParameter( 2, DM_R_SCALE        );
     pFuncDir->SetParameter( 3, SUN_DISTANCE      );
 
-    pFuncDir->SetNpx( 36 );
-    pFuncDir->SetNpy( 72 );
+    pFuncDir->SetNpx( 360 );
+    pFuncDir->SetNpy( 720 );
+
+    pFuncFlux->SetParameter( 0, los               );
+    pFuncFlux->SetParameter( 1, PROTON_MASS       );
+    pFuncFlux->SetParameter( 2, dmM               );
+    pFuncFlux->SetParameter( 3, xsection          ); // assume sigma_DM = 10^-30 [1/cm^2]
+    pFuncFlux->SetParameter( 4, DM_RHO_SCALE      );
+    pFuncFlux->SetParameter( 5, DM_R_SCALE        );
+    pFuncFlux->SetParameter( 6, SUN_DISTANCE      );
+    pFuncFlux->SetParameter( 7, LAMBDA_P          );
+
+    // double totValue = 1.0;
+    // pFuncFlux->SetNpx(1000);
+    // pFuncFlux->SetNpy(1000);
+    // pFuncFlux->SetNpz(10000);
+
+    // calc integral
+    double xEn[20] = {};
+    double yFlux[20] = {};
+    double totValue = 0.0;
+    for( int ix = 0; ix < 40; ++ix ) {
+        DEBUG(ix);
+        double xVal = TMath::Pi( ) * (double)ix / 40.0 - 0.5 * TMath::Pi( );
+        double xNorm = TMath::Pi( ) / 40.0;
+        for( int iy = 0; iy < 40; ++iy ) {
+            double yVal = 2.0 * TMath::Pi( ) * (double)iy / 40.0 - 0.0;
+            double yNorm = 2.0 * TMath::Pi( ) / 40.0;
+
+            for( int izOrder = 0; izOrder < 20; ++izOrder ) { // energy order: -8 - 12
+                for( int izNum = 0; izNum < 10; ++izNum ) {
+                    if( izNum == 0 && izOrder == 0 ) continue;
+                    int orderMin = izOrder - 8;
+                    int orderMax = orderMin + 1;
+                    double zNorm = ( pow( 10.0, orderMax ) - pow( 10.0, orderMin ) ) / 10.0;
+                    double zVal = pow( 10.0, orderMin ) + zNorm * (double)izNum;
+                    
+                    totValue += pFuncFlux->Eval( xVal, yVal, zVal ) * ( xNorm * yNorm * zNorm );
+                    xEn[izOrder] = zVal;
+                    yFlux[izOrder] = pFuncFlux->Eval( xVal, yVal, zVal );
+                }
+            }
+        }
+    }
+
+    // DEBUG( totValue );
 
     // create CDF
     double x[100000], y[100000];
@@ -80,7 +124,6 @@ int main( int argc, char** argv )
     for( int i = 0; i < 100000; ++i ) {
         printProgressBar( i, 100000 );
         double val = 0.0;
-        // x[i] = V_LIGHT * (double)i * 0.0001 * 0.1; // 0 < v < 0.1c
         x[i] = V_LIGHT * (double)i * 0.00001; // 0 < v < c
         xCDF[i] = x[i];
         y[i] =  pFuncEn->Eval( x[i] );
@@ -110,9 +153,6 @@ int main( int argc, char** argv )
         yCDFinv[i] = 1.0 - yCDFinv[i];
     }
 
-    double totValue = 1.0;
-
-    gRandom->SetSeed( 0 );
 
     TFile file( fileName.c_str( ), "RECREATE" );
     TTree* pTree = new TTree( "tree", "tree" );
@@ -143,7 +183,10 @@ int main( int argc, char** argv )
     pTree->Branch( "lambdaP",     &lambdaP     );
 
     pTree->Branch( "rnd",         &rnd         );
-    
+
+    DEBUG("test");
+
+    gRandom->SetSeed( 0 );
     for( int i = 0; i < evtNum; ++i ) {
         printProgressBar( i, evtNum );
         rnd = gRandom->Rndm( );
@@ -174,6 +217,11 @@ int main( int argc, char** argv )
     graphCDFinv.SetName("vCDFnv");
     graphCDFinv.SetMarkerStyle( 20 );
     graphCDFinv.Write();
+
+    TGraph gFlux(20, xEn, yFlux);
+    gFlux.SetName("vFlux");
+    gFlux.SetMarkerStyle( 20 );
+    gFlux.Write();
 
     file.Close( );
 
