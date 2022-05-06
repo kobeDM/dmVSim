@@ -1,13 +1,34 @@
 #include "inc/shinclude.h"
 
-void drawPlots( const String& inputFile, const String& outputDir )
+const double EXPOSURE = 0.15 * 1.3e+06;
+
+void drawPlots( const String& inputFile, const String& outputDir, const String& plotName )
 {
     ShUtil::ExistCreateDir( outputDir );
+    
+    String subDir = outputDir + "/";
+    subDir += plotName;
+    ShUtil::ExistCreateDir( subDir );
+
     SetAtlasStyle( );
 
     TFile file( inputFile.c_str( ) );
     TTree* pTree = dynamic_cast< TTree* >( file.Get( "tree" ) );
     if( pTree == nullptr ) return;
+
+    // find text file
+    String txtFileName = outputDir + "/events.txt";
+    DEBUG(txtFileName);
+    std::ofstream ofs;
+    if( ShUtil::ExistFile( txtFileName ) == true ) {
+        ofs.open( txtFileName, std::ios_base::app );
+    }
+    else {
+        ofs.open( txtFileName, std::ios_base::out  );
+        ofs << "plotname\tnTotalSI\tnPlusSI\tnFOMSI\tnFOMSIError\tnTotalSD\tnPlusSD\tnFOMSD\tnFOMSDError" << std::endl;
+    }
+
+    if( ofs.is_open( ) == false ) return;
 
     double dmM = 0.0;
     double dmInjV = 0.0;
@@ -73,6 +94,10 @@ void drawPlots( const String& inputFile, const String& outputDir )
     TH1D* pHistNuCosGCRateSD_E1GeV   = new TH1D( "histNuCosGCRateSD_E1GeV",   "histNuCosGCRateSD_E1GeV",   40, -1.0, 1.0 );
     TH1D* pHistNuCosGCRateSD_EMore   = new TH1D( "histNuCosGCRateSD_EMore",   "histNuCosGCRateSD_EMore",   40, -1.0, 1.0 );
 
+    TH1D* pHistNuE_600keV    = new TH1D( "histNuE_600keV",   "histNuE_600keV",   100, 0.0, 600 );
+    TH1D* pHistNuE_3000keV   = new TH1D( "histNuE_3000keV",  "histNuE_3000keV",  100, 0.0, 3000 );
+    TH1D* pHistNuE_10000keV  = new TH1D( "histNuE_10000keV", "histNuE_10000keV", 100, 0.0, 10000 );
+
     int totEvt = pTree->GetEntries( );
     for( int evt = 0; evt < totEvt; ++evt ) {
         ShUtil::PrintProgressBar( evt, totEvt );
@@ -132,6 +157,9 @@ void drawPlots( const String& inputFile, const String& outputDir )
                 pHistNuCosGCRateSD_E3MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
             }
 
+            if( nuRecE < 0.0006 ) pHistNuE_600keV->Fill  ( nuRecE * 1000000.0, 0.0001 * invWeight * totalRateSI / (double)totEvt );
+            if( nuRecE < 0.003  ) pHistNuE_3000keV->Fill ( nuRecE * 1000000.0, 0.0001 * invWeight * totalRateSI / (double)totEvt );
+            if( nuRecE < 0.01   ) pHistNuE_10000keV->Fill( nuRecE * 1000000.0, 0.0001 * invWeight * totalRateSI / (double)totEvt );
         }
     }
 
@@ -184,7 +212,7 @@ void drawPlots( const String& inputFile, const String& outputDir )
     pLeg->AddEntry( pHistNuCosGC_E100keV, "10 keV < E_{rec} < 100 keV", "l" );
     pLeg->Draw( );
 
-    cvs.SaveAs( Form( "%s/cosGC.png", outputDir.c_str( ) ) );
+    cvs.SaveAs( Form( "%s/%s_cosGC.png", subDir.c_str( ), plotName.c_str( ) ) );
 
     TH1D* pHistNuCosGCRateSI_tot = new TH1D( "histNuCosGCRateSI_tot",  "histNuCosGCRateSI_tot",  40, -1.0, 1.0 );
     TH1D* pHistNuCosGCRateSD_tot = new TH1D( "histNuCosGCRateSD_tot",  "histNuCosGCRateSD_tot",  40, -1.0, 1.0 );
@@ -282,8 +310,7 @@ void drawPlots( const String& inputFile, const String& outputDir )
     else if( dmM < 1.0   ) ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf MeV, %s recoil", dmM*1000.0, atomStr.c_str( ) ) );
     else                   ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf GeV, %s recoil", dmM, atomStr.c_str( ) ) );
 
-    cvs.SaveAs( Form( "%s/cosGCSI.png", outputDir.c_str( ) ) );
-
+    cvs.SaveAs( Form( "%s/%s_cosGCSI.png", subDir.c_str( ), plotName.c_str( ) ) );
 
     max_histNuCosGC = pHistNuCosGCRateSD_tot->GetMaximum( );
     pHistNuCosGCRateSD_tot->GetYaxis( )->SetRangeUser( 0.0, max_histNuCosGC * 1.4 );
@@ -311,10 +338,28 @@ void drawPlots( const String& inputFile, const String& outputDir )
     if     ( dmM < 0.001 ) ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf keV, %s recoil", dmM*1000000.0, atomStr.c_str( ) ) );
     else if( dmM < 1.0   ) ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf MeV, %s recoil", dmM*1000.0, atomStr.c_str( ) ) );
     else                   ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf GeV, %s recoil", dmM, atomStr.c_str( ) ) );
-    cvs.SaveAs( Form( "%s/cosGCSD.png", outputDir.c_str( ) ) );
+    cvs.SaveAs( Form( "%s/%s_cosGCSD.png", subDir.c_str( ), plotName.c_str( ) ) );
 
+    if( atom == 10 ) {
+        pHistNuE_3000keV->GetXaxis()->SetTitle( "Recoil energy [keV]" );
+        pHistNuE_3000keV->GetYaxis()->SetTitle( "Events / sec / kg" );
+        pHistNuE_3000keV->Draw( "hist" );
+    }
+    else if( atom == 11 ) {
+        pHistNuE_600keV->GetXaxis()->SetTitle( "Recoil energy [keV]" );
+        pHistNuE_600keV->GetYaxis()->SetTitle( "Events / sec / kg" );
+        pHistNuE_600keV->Draw( "hist" );
+    }
+    else if( atom == 12 ) {
+        pHistNuE_10000keV->GetXaxis()->SetTitle( "Recoil energy [keV]" );
+        pHistNuE_10000keV->GetYaxis()->SetTitle( "Events / sec / kg" );
+        pHistNuE_10000keV->Draw( "hist" );
+    }
+
+    cvs.SaveAs( Form( "%s/%s_nuE.png", subDir.c_str( ), plotName.c_str( ) ) );
+
+    // 2D plots
     cvs.SetGridx( 1 ); cvs.SetGridy( 1 );
-
     const Int_t NRGBs = 5; const Int_t NCont = 63;
     Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
     Double_t red[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 1.00 };
@@ -327,13 +372,31 @@ void drawPlots( const String& inputFile, const String& outputDir )
     pHist2DDMDir->GetYaxis( )->SetTitle( "#it{#theta}_{DM}" );
     pHist2DDMDir->GetZaxis( )->SetTitle( "A.U." );
     pHist2DDMDir->Draw( "aitoff" );
-    cvs.SaveAs( Form( "%s/dmDir.png", outputDir.c_str( ) ) );
+    cvs.SaveAs( Form( "%s/%s_dmDir.png", subDir.c_str( ), plotName.c_str( ) ) );
 
     pHist2DNuDir->GetXaxis( )->SetTitle( "#it{#phi}_{N}" );
     pHist2DNuDir->GetYaxis( )->SetTitle( "#it{#theta}_{N}" );
     pHist2DNuDir->GetZaxis( )->SetTitle( "A.U." );
     pHist2DNuDir->Draw( "aitoff" );
-    cvs.SaveAs( Form( "%s/nuDir.png", outputDir.c_str( ) ) );
+    cvs.SaveAs( Form( "%s/%s_nuDir.png", subDir.c_str( ), plotName.c_str( ) ) );
+
+    // input txt
+    double nTotalSI = pHistNuCosGCRateSI_tot->Integral( 1, 40 ) * EXPOSURE;
+    double nTotalSD = pHistNuCosGCRateSD_tot->Integral( 1, 40 ) * EXPOSURE;
+
+    double nPlusSI = pHistNuCosGCRateSI_tot->Integral( 21, 40 ) * EXPOSURE;
+    double nPlusSD = pHistNuCosGCRateSD_tot->Integral( 21, 40 ) * EXPOSURE;
+
+    double nFOMSI = nPlusSI / nTotalSI;
+    double nFOMSD = nPlusSD / nTotalSD;
+
+    double nFOMSIError = sqrt( nTotalSI*nTotalSI*nPlusSI + nTotalSI*nPlusSI*nPlusSI) / nTotalSI / nTotalSI;
+    double nFOMSDError = sqrt( nTotalSD*nTotalSD*nPlusSD + nTotalSD*nPlusSD*nPlusSD) / nTotalSD / nTotalSD;
+
+    std::cout << "total SI: " << nTotalSI << ",\tplus SI: " << nPlusSI << ", \tFOM SI: " << nFOMSI << ", pm: " << nFOMSIError << std::endl;
+    std::cout << "total SD: " << nTotalSD << ",\tplus SD: " << nPlusSD << ", \tFOM SD: " << nFOMSD << ", pm: " << nFOMSDError << std::endl;
+
+    ofs << plotName << "\t" << nTotalSI << "\t" << nPlusSI << "\t" << nFOMSI << "\t" << nFOMSIError << "\t" << nTotalSD << "\t" << nPlusSD << "\t" << nFOMSD << "\t" << nFOMSDError << "\t" << std::endl;
 
     return;
 }
