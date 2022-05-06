@@ -133,7 +133,6 @@ int main( int argc, char** argv )
     nuMList[10]=0.932*19.;                            // F
     nuMList[12]=0.932*1.;                             // H
 
-
     double spinFactorList[15] = { };
 
     //SD
@@ -141,9 +140,6 @@ int main( int argc, char** argv )
     spinFactorList[10]=0.647;                          // F
     spinFactorList[12]=0.750;                          // H
 
-    // FILE* fp1  = fopen("data/dist_blue10GeV.dat", "wt");         //output file
-    // FILE* fp2  = fopen("data/output2_dist_blue10GeV.dat", "wt"); //output file
-    // int   atom = 10; // fixed to fluorine
     printf("atom is %d (0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag, 12=p)\n",atom);
 
     double nuM = nuMList[ atom ];
@@ -227,8 +223,10 @@ int main( int argc, char** argv )
                                         
     pOutTree->Branch( "nuRecTheta",       &nuScatThetaExp    );
     pOutTree->Branch( "nuRecPhi",         &nuScatPhiExp      );
+    pOutTree->Branch( "nuRecSinTheta",    &nuSinScatThetaExp );
     pOutTree->Branch( "nuRecCosTheta",    &nuCosScatThetaExp );
     pOutTree->Branch( "nuRecSinPhi",      &nuSinScatPhiExp   );
+    pOutTree->Branch( "nuRecCosPhi",      &nuCosScatPhiExp   );
     pOutTree->Branch( "nuRecV",           &nuFinVExp         );
     pOutTree->Branch( "nuRecVX",          &nuFinVExpX        );
     pOutTree->Branch( "nuRecVY",          &nuFinVExpY        );
@@ -305,6 +303,7 @@ int main( int argc, char** argv )
         nuSinScatThetaExp = nuFinVExpVec.Z( ) / nuFinVExp;
         nuCosScatThetaExp = sqrt( 1.0 - sq( nuSinScatThetaExp ) );
         nuSinScatPhiExp   = nuFinVExpVec.Y( ) / nuFinVExp / nuCosScatThetaExp;
+        nuCosScatPhiExp   = sqrt( 1.0 - sq( nuSinScatPhiExp ) );
 
         nuScatThetaExp = asin( nuSinScatThetaExp );
         nuScatPhiExp   = asin( nuSinScatPhiExp   );
@@ -315,14 +314,6 @@ int main( int argc, char** argv )
         
         rndm = gRandom->Rndm( );
         formFactorSq = getFormFactorSq( nuRecoilE, atom );
-        // if( rndm <= formFactorSq ) {
-        //     group = 1;
-        //     fprintf(fp1,"%d %d %lf %lf %lf %lf\n",
-        //             group, atom, dmM, nuCosScatThetaExp, nuSinScatPhiExp, nuRecoilE );
-        //     //1     2     3    4    5                    6
-        //     fprintf(fp2,"%lf %lf %lf %lf %lf\n",
-        //             dmInitVExpVec.X( ), dmInitVExpVec.Y( ), dmInitVExpVec.Z( ), nuM, nuFinVExp );
-        // }
         pOutTree->Fill( );
 
     }//end of event number loop
@@ -331,8 +322,6 @@ int main( int argc, char** argv )
 
     printf("\n");
     printf("%s", ctime(&t));//time to finish calc.
-    // fclose(fp1);
-    // fclose(fp2);
 
     return 0;
 }
