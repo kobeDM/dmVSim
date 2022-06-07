@@ -41,6 +41,9 @@ TVector3 rotation         ( TVector3      u,
                             const double& be,
                             const double& ga );
 
+TVector3 rotation         ( TVector3      rotate,
+                            TVector3      base );
+
 double   getFormFactorSq  ( const double& ER,
                             const int&    atom );
 
@@ -81,6 +84,9 @@ int main( int argc, char** argv )
     double dmFinVExp  = 0.0, dmFinVExpX  = 0.0, dmFinVExpY  = 0.0 , dmFinVExpZ  = 0.0;
     double nuFinVExp  = 0.0, nuFinVExpX  = 0.0, nuFinVExpY  = 0.0 , nuFinVExpZ  = 0.0;
 
+    double dmInjRotV = 0.0, dmInjRotVX = 0.0, dmInjRotVY = 0.0, dmInjRotVZ = 0.0; // debug
+
+
     double nuFinVTmpExp  = 0.0, nuFinVTmpExpX  = 0.0, nuFinVTmpExpY  = 0.0 , nuFinVTmpExpZ  = 0.0;
     double nuFinETmpExp  = 0.0, nuFinMomTmpExp  = 0.0;
 
@@ -114,6 +120,8 @@ int main( int argc, char** argv )
     TVector3 nuFinVTmpExpVec;
     TVector3 dmFinVExpVec;
     TVector3 nuFinVExpVec;
+
+    TVector3 dmInjRotVec; // test
 
     double rndm = 0.0;
 
@@ -250,6 +258,13 @@ int main( int argc, char** argv )
     pOutTree->Branch( "mandelU",          &mandelU           );
     pOutTree->Branch( "invWeight",        &invWeight         );
 
+    // debug
+    pOutTree->Branch( "dmInjRotV",        &dmInjRotV        );
+    pOutTree->Branch( "dmInjRotVX",       &dmInjRotVX       );
+    pOutTree->Branch( "dmInjRotVY",       &dmInjRotVY       );
+    pOutTree->Branch( "dmInjRotVZ",       &dmInjRotVZ       );
+
+
     int totEvt = pInTree->GetEntries( );
     for( int evt = 0; evt < totEvt; ++evt ) {
         printProgressBar( evt, totEvt );
@@ -295,7 +310,20 @@ int main( int argc, char** argv )
 
         beta         = getRotAngleBeta ( dmInitVExpVec );
         gamma        = getRotAngleGamma( dmInitVExpVec );
-        nuFinVExpVec = rotation( nuFinVTmpExpVec, beta, gamma );
+        // nuFinVExpVec = rotation( nuFinVTmpExpVec, beta, gamma );
+        nuFinVExpVec = rotation( dmInitVExpVec,  nuFinVTmpExpVec );
+
+        TVector3 dmInitVTmpExpVec;
+        dmInitVTmpExpVec.SetX( dmInitVExpVec.Mag( ) );
+        dmInitVTmpExpVec.SetY( 0 );
+        dmInitVTmpExpVec.SetZ( 0 );
+        dmInjRotVec = rotation( dmInitVExpVec, dmInitVTmpExpVec );
+
+        dmInjRotVX = dmInjRotVec.X( );
+        dmInjRotVY = dmInjRotVec.Y( );
+        dmInjRotVZ = dmInjRotVec.Z( );
+        dmInjRotV  = dmInjRotVec.Mag( );
+
 
         nuFinVExpX = nuFinVExpVec.X( );
         nuFinVExpY = nuFinVExpVec.Y( );
@@ -446,6 +474,20 @@ TVector3 rotation( TVector3      u,
     ans.SetY(  u.X( ) * cos( be ) * sin( ga ) + u.Y( ) * cos( ga ) + u.Z( ) * sin( be ) * sin( ga ) );
     ans.SetZ( -u.X( ) * sin( be )                                  + u.Z( ) * cos( be )             );
     return ans;
+}
+
+// rotation from Lab' to Lab frame
+TVector3 rotation( TVector3      rotate,
+                   TVector3      base )
+{
+    TVector3 ans( base );
+    TVector3 tmpDir = -ans.Unit( );
+    ans.RotateUz( tmpDir );
+    ans.RotateZ( gRandom->Rndm( ) * TMath::Pi( ) * 2.0 );
+    TVector3 rotDir = rotate.Unit( );
+    ans.RotateUz( rotDir );
+    
+    return -ans;
 }
 
 
