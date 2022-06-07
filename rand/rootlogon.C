@@ -12,6 +12,7 @@
     gStyle->SetNumberContours( NCont );
 
     gInterpreter->AddIncludePath("./ShUtil");
+    gInterpreter->AddIncludePath("./macros");
     std::cout << "Adding the include path to : "  << gSystem->GetIncludePath( ) << std::endl;
 
 }
