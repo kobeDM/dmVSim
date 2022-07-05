@@ -127,6 +127,10 @@ int main( int argc, char** argv )
 
     double mandelS = 0.0, mandelT = 0.0, mandelU = 0.0;
     
+
+    double nuScatGammaExp    = 0.0;
+    double nuCosScatGammaExp    = 0.0;
+
     // int group = 0;
     double nuMList[15] = { };
 
@@ -240,6 +244,9 @@ int main( int argc, char** argv )
     pOutTree->Branch( "nuRecVY",          &nuFinVExpY        );
     pOutTree->Branch( "nuRecVZ",          &nuFinVExpZ        );
     pOutTree->Branch( "nuRecE",           &nuRecoilE         );
+
+    pOutTree->Branch( "nuRecCosGamma",    &nuCosScatGammaExp );
+    pOutTree->Branch( "nuRecGamma",       &nuScatGammaExp    );
                                         
     pOutTree->Branch( "sysRelV",          &sysRelativeV      );
 
@@ -284,6 +291,10 @@ int main( int argc, char** argv )
 
         scatThetaCom = gRandom->Rndm( ) * 1.0 * PI;
         cosScatThetaCom = cos( scatThetaCom );
+
+        // cosScatThetaCom = gRandom->Rndm( ) * randomPM( );
+        // scatThetaCom = acos( cosScatThetaCom );
+
         mandelT = -2.0 * dmMomCom * dmMomCom * ( 1.0 - cosScatThetaCom );
 
         // calculate theta and E at a Lab'-frame
@@ -339,6 +350,10 @@ int main( int argc, char** argv )
         if( nuScatPhiExp < 0.0 ) nuScatPhiExp = nuScatPhiExp + 2.0 * PI;
 
         nuRecoilE = getRecoilEnergy( nuM, nuFinVExp );
+
+        double nuPhiCorr = ( nuScatPhiExp > TMath::Pi( ) ) ? nuScatPhiExp - 2.0 * TMath::Pi( ) : nuScatPhiExp;
+        nuCosScatGammaExp = nuCosScatThetaExp * cos( nuPhiCorr );
+        nuScatGammaExp = acos( nuCosScatGammaExp );
         
         rndm = gRandom->Rndm( );
         formFactorSq = getFormFactorSq( nuRecoilE, atom );
