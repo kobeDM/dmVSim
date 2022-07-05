@@ -13,6 +13,8 @@
 
     gInterpreter->AddIncludePath("./ShUtil");
     gInterpreter->AddIncludePath("./macros");
+    gInterpreter->AddIncludePath("./include");
+    gInterpreter->AddIncludePath("./src");
     std::cout << "Adding the include path to : "  << gSystem->GetIncludePath( ) << std::endl;
 
 }

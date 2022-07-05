@@ -494,7 +494,7 @@ double getDMEinastoFluxDir( double theta,
     double r        = sqrt( fabs( rsq ) );
 
     double relR     = r / dmRScale;
-    double rhoEinasto   = dmDScale * exp( -2.0 * ( pow( relR, EIN_ALPHA ) - 1.0 ) / EIN_ALPHA ); // GeV/cm^3
+    double rhoEinasto   = dmDScale * exp( -2.0 * ( pow( relR, DM_ALPHA_EIN ) - 1.0 ) / DM_ALPHA_EIN ); // GeV/cm^3
     double jacobian = los*los; // Note: This jacobian should only affect the los. Do not add cosTheta!!!
     double fluxCorr = 1.0 / (4.0*TMath::Pi()*los*los);
 

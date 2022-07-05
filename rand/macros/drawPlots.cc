@@ -1,6 +1,12 @@
 #include "inc/shinclude.h"
 
-const double EXPOSURE = 0.15 * 1.3e+06;
+// const double EXPOSURE = 0.15 * 1.3e+06; // 
+const double EXPOSURE = 0.155 * 0.78 * 1.0 * 31536000.0; // [SF6 density (20 Torr) : kg/m3] * [F occupancy for SF6] * volume [m3] * 1 year [sec]
+
+double getThetaWeight( const double& theta, 
+                       const int&    bin,
+                       const double& min,
+                       const double& max );
 
 void drawPlots( const String& inputFile, const String& outputDir, const String& plotName )
 {
@@ -25,7 +31,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     }
     else {
         ofs.open( txtFileName, std::ios_base::out  );
-        ofs << "plotname\tnTotalSI\tnPlusSI\tnFOMSI\tnFOMSIError\tnTotalSD\tnPlusSD\tnFOMSD\tnFOMSDError" << std::endl;
+        ofs << "#plotname\tnTotalSI\tnPlusSI\tnFOMSI\tnFOMSIError\tnTotalSD\tnPlusSD\tnFOMSD\tnFOMSDError" << std::endl;
     }
 
     if( ofs.is_open( ) == false ) return;
@@ -112,7 +118,10 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
         pHist2DDMCosGCV->Fill( dmCosGC, dmInjV / ( TMath::C( ) * 0.001 ) );
         
         if( rndm <= formFactorSq ) {
+            double binCorrThetaWeight = getThetaWeight( nuRecTheta * 180.0 / TMath::Pi( ), 100, -90.0, 90.0 );
+
             pHist2DNuDir->Fill( nuPhiCorr * 180.0 / TMath::Pi( ), nuRecTheta * 180.0 / TMath::Pi( ) );
+            // pHist2DNuDir->Fill( nuPhiCorr * 180.0 / TMath::Pi( ), nuRecTheta * 180.0 / TMath::Pi( ), binCorrThetaWeight ); // debug
 
             double nuRecCosGC = cos( nuRecTheta ) *cos( nuPhiCorr );
             pHist2DNuCosGCE->Fill( nuRecCosGC, nuRecE*1000.0 );
@@ -378,6 +387,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     pHist2DNuDir->GetYaxis( )->SetTitle( "#it{#theta}_{N}" );
     pHist2DNuDir->GetZaxis( )->SetTitle( "A.U." );
     pHist2DNuDir->Draw( "aitoff" );
+    // pHist2DNuDir->Draw( "colz" ); // debug
     cvs.SaveAs( Form( "%s/%s_nuDir.png", subDir.c_str( ), plotName.c_str( ) ) );
 
     // input txt
@@ -401,3 +411,20 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     return;
 }
 
+double getThetaWeight( const double& theta, 
+                       const int&    bin,
+                       const double& min,
+                       const double& max )
+{
+    double binCenter = 0.0;
+    double binWidth = (max - min) / static_cast< double >( bin );
+    
+    for( int i = 0; i < bin; ++i ) {
+        if( theta > min + static_cast< double >( i     ) * binWidth &&
+            theta < min + static_cast< double >( i + 1 ) * binWidth ) {
+            binCenter = min + static_cast< double >( i ) * binWidth + binWidth * 0.5;
+        }
+    }
+    
+    return 1.0 / cos( binCenter * TMath::Pi( ) / 180.0 );
+}
