@@ -321,8 +321,8 @@ int main( int argc, char** argv )
 
         beta         = getRotAngleBeta ( dmInitVExpVec );
         gamma        = getRotAngleGamma( dmInitVExpVec );
-        // nuFinVExpVec = rotation( nuFinVTmpExpVec, beta, gamma );
-        nuFinVExpVec = rotation( dmInitVExpVec,  nuFinVTmpExpVec );
+        nuFinVExpVec = rotation( nuFinVTmpExpVec, beta, gamma );
+        // nuFinVExpVec = rotation( dmInitVExpVec,  nuFinVTmpExpVec );
 
         TVector3 dmInitVTmpExpVec;
         dmInitVTmpExpVec.SetX( dmInitVExpVec.Mag( ) );

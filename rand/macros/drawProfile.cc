@@ -33,9 +33,15 @@ void drawProfile( )
     funcEIN.SetParameter( 2, DM_ALPHA_EIN );
 
     // scaling
-    funcNFW.SetParameter( 1, DM_RHO_SCALE_NFW / funcNFW.Eval( SUN_DISTANCE ) );
-    funcPIT.SetParameter( 1, DM_RHO_SCALE_PIT / funcPIT.Eval( SUN_DISTANCE ) );
-    funcEIN.SetParameter( 1, DM_RHO_SCALE_EIN / funcEIN.Eval( SUN_DISTANCE ) );
+    // -- NOTE: corrected rho scale is already applied above. Skip the following correction. --
+
+    // double corrRhoScaleNFW = DM_RHO_SCALE_NFW*DM_RHO_SCALE_NFW / funcNFW.Eval( SUN_DISTANCE );
+    // double corrRhoScalePIT = DM_RHO_SCALE_PIT*DM_RHO_SCALE_PIT / funcPIT.Eval( SUN_DISTANCE );
+    // double corrRhoScaleEIN = DM_RHO_SCALE_EIN*DM_RHO_SCALE_EIN / funcEIN.Eval( SUN_DISTANCE );
+    // funcNFW.SetParameter( 1, corrRhoScaleNFW );
+    // funcPIT.SetParameter( 1, corrRhoScalePIT );
+    // funcEIN.SetParameter( 1, corrRhoScaleEIN );
+    // std::cout << "scaling parameter: rho_NFW = " << corrRhoScaleNFW << ",\trho_PIT = " << corrRhoScalePIT << ",\trho_EIN = " << corrRhoScaleEIN << std::endl;
 
     TCanvas cvs( "cvs", "cvs", 800, 600 );
     cvs.SetLogx(1);
@@ -45,8 +51,6 @@ void drawProfile( )
     funcNFW.GetXaxis()->SetTitle( "Distance from G.C. [kpc]" );
     funcNFW.GetYaxis()->SetTitle( "DM density [GeV / cm^{3}]" );
 
-
-    // funcNFW.GetYaxis()->SetLimits(0.001, 100000.0);
     funcNFW.Draw();
     funcPIT.Draw("same");
     funcEIN.Draw("same");
