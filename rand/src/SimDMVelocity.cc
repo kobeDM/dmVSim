@@ -37,40 +37,42 @@ int main( int argc, char** argv )
         abort( );
     }
     
-    double xsection = 1e-30; // [cm^2]
+    double xsection = 1e-32; // [cm^2]
 
     // calculate integral of the dark matter flux
     TF3* pFuncFlux = nullptr;
     TF2* pFuncDir = nullptr;
-    double rhoScaleKPC = 0.0, rScaleKPC = 0.0;
+    // double rhoScaleKPC = 0.0, rScaleKPC = 0.0;
+    double rhoScale = 0.0, rhoScaleKPC = 0.0, rScaleKPC = 0.0;
     if( profile == "NFW" ) {
         pFuncFlux = new TF3( "flux", getDMNFWFluxInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 1e-8, 1e+12, 8, 3 );
         pFuncDir = new TF2( "fluxDir", getDMNFWFluxDir, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
-        rhoScaleKPC = DM_RHO_SCALE_NFW / ( PC2CM*PC2CM*PC2CM ); // converted to [GeV / kpc^3]
-        rScaleKPC   = DM_R_SCALE_NFW;
+        rhoScale  = DM_RHO_SCALE_NFW;
+        rScaleKPC = DM_R_SCALE_NFW;
     }
     else if( profile == "IT" ) {
         pFuncFlux = new TF3( "flux", getDMIsoThermalFluxInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 1e-8, 1e+12, 8, 3 );
         pFuncDir = new TF2( "fluxDir", getDMIsoThermalFluxDir, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
-        rhoScaleKPC = DM_RHO_SCALE_PIT / ( PC2CM*PC2CM*PC2CM ); // converted to [GeV / kpc^3]
-        rScaleKPC   = DM_R_SCALE_PIT;
+        rhoScale  = DM_RHO_SCALE_PIT;
+        rScaleKPC = DM_R_SCALE_PIT;
     }
     else if( profile == "EIN" ) {
         pFuncFlux = new TF3( "flux", getDMEinastoFluxInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 1e-8, 1e+12, 8, 3 );
         pFuncDir = new TF2( "fluxDir", getDMEinastoFluxDir, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
-        rhoScaleKPC = DM_RHO_SCALE_EIN / ( PC2CM*PC2CM*PC2CM ); // converted to [GeV / kpc^3]
-        rScaleKPC   = DM_R_SCALE_EIN;
+        rhoScale  = DM_RHO_SCALE_EIN;
+        rScaleKPC = DM_R_SCALE_EIN;
     }
+    rhoScaleKPC = rhoScale * PC2CM*PC2CM*PC2CM; // converted to [GeV / kpc^3]
 
     TF1* pFuncEn = new TF1( "fluxEn", getDMFluxEn, 0.0, V_LIGHT, 4, 1 );
 
     pFuncEn->SetParameter( 0, PROTON_MASS       );
     pFuncEn->SetParameter( 1, dmM               );
-    pFuncEn->SetParameter( 2, xsection          ); // assume sigma_DM = 10^-30 [1/cm^2]
+    pFuncEn->SetParameter( 2, xsection          ); // assume sigma_DM = 10^-32 [1/cm^2]
     pFuncEn->SetParameter( 3, LAMBDA_P          );
 
     pFuncDir->SetParameter( 0, los               );
-    pFuncDir->SetParameter( 1, rhoScaleKPC       );
+    pFuncDir->SetParameter( 1, rhoScale          );
     pFuncDir->SetParameter( 2, rScaleKPC         );
     pFuncDir->SetParameter( 3, SUN_DISTANCE      );
 
@@ -80,16 +82,16 @@ int main( int argc, char** argv )
     pFuncFlux->SetParameter( 0, los               );
     pFuncFlux->SetParameter( 1, PROTON_MASS       );
     pFuncFlux->SetParameter( 2, dmM               );
-    pFuncFlux->SetParameter( 3, xsection          ); // assume sigma_DM = 10^-30 [1/cm^2]
-    pFuncFlux->SetParameter( 4, rhoScaleKPC       );
+    pFuncFlux->SetParameter( 3, xsection          ); // assume sigma_DM = 10^-32 [1/cm^2]
+    pFuncFlux->SetParameter( 4, rhoScale          );
     pFuncFlux->SetParameter( 5, rScaleKPC         );
     pFuncFlux->SetParameter( 6, SUN_DISTANCE      );
     pFuncFlux->SetParameter( 7, LAMBDA_P          );
 
     // double totValue = 1.0;
-    // pFuncFlux->SetNpx(1000);
-    // pFuncFlux->SetNpy(1000);
-    // pFuncFlux->SetNpz(10000);
+    pFuncFlux->SetNpx(1000);
+    pFuncFlux->SetNpy(1000);
+    pFuncFlux->SetNpz(10000);
 
     // calc integral
     double xEn[20] = {};
@@ -159,7 +161,6 @@ int main( int argc, char** argv )
         yCDFinv[i] = 1.0 - yCDFinv[i];
     }
 
-
     TFile file( fileName.c_str( ), "RECREATE" );
     TTree* pTree = new TTree( "tree", "tree" );
     double theta = 0.0, phi = 0.0, velocity = 0.0, velocityInv = 0.0;
@@ -183,6 +184,7 @@ int main( int argc, char** argv )
     pTree->Branch( "pM",          &pM          );
     pTree->Branch( "xsection",    &xsection    );
     pTree->Branch( "rhoScaleKPC", &rhoScaleKPC );
+    pTree->Branch( "rhoScale",    &rhoScale    );
     pTree->Branch( "rScaleKPC",   &rScaleKPC   );
     pTree->Branch( "sunDistance", &sunDistance );
     pTree->Branch( "lambdaP",     &lambdaP     );
