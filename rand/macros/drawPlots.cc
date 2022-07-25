@@ -3,6 +3,11 @@
 // const double EXPOSURE = 0.15 * 1.3e+06; // 
 const double EXPOSURE = 0.155 * 0.78 * 1.0 * 31536000.0; // [SF6 density (20 Torr) : kg/m3] * [F occupancy for SF6] * volume [m3] * 1 year [sec]
 
+// debug
+const double PC2CM      = 3.086*1e21; // kpc->cm [cm/kpc]
+const double CORRECTION = 1.0; // should not considered any corrections if our calculation is correct!!!
+// const double CORRECTION = 2722.26;
+
 double getThetaWeight( const double& theta, 
                        const int&    bin,
                        const double& min,
@@ -128,47 +133,47 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
 
             if     ( nuRecE > 1.0     ) { 
                 pHistNuCosGC_EMore->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_EMore->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt ); 
-                pHistNuCosGCRateSD_EMore->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt ); 
+                pHistNuCosGCRateSI_EMore->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSD_EMore->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION ); 
             }
             else if( nuRecE > 0.1     ) { 
                 pHistNuCosGC_E1GeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E1GeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt ); 
-                pHistNuCosGCRateSD_E1GeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt ); 
+                pHistNuCosGCRateSI_E1GeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSD_E1GeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION ); 
             }
             else if( nuRecE > 0.01    ) {
                 pHistNuCosGC_E100MeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E100MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-                pHistNuCosGCRateSD_E100MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
+                pHistNuCosGCRateSI_E100MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E100MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
             }
             else if( nuRecE > 0.001   ) {
                 pHistNuCosGC_E10MeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E10MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt ); 
-                pHistNuCosGCRateSD_E10MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt ); 
+                pHistNuCosGCRateSI_E10MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSD_E10MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION ); 
             }
             else if( nuRecE > 0.0001  ) { 
                 pHistNuCosGC_E1MeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E1MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-                pHistNuCosGCRateSD_E1MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
+                pHistNuCosGCRateSI_E1MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E1MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
             }
             else if( nuRecE > 0.00001 ) { 
                 pHistNuCosGC_E100keV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E100keV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-                pHistNuCosGCRateSD_E100keV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
+                pHistNuCosGCRateSI_E100keV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E100keV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
             }
 
             if( nuRecE > 0.0001 && nuRecE < 0.0006 ) {
-                pHistNuCosGCRateSI_E600keV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-                pHistNuCosGCRateSD_E600keV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
+                pHistNuCosGCRateSI_E600keV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E600keV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
             }
             if( nuRecE > 0.001 && nuRecE < 0.003 ) {
-                pHistNuCosGCRateSI_E3MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-                pHistNuCosGCRateSD_E3MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
+                pHistNuCosGCRateSI_E3MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E3MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
             }
 
-            if( nuRecE < 0.0006 ) pHistNuE_600keV->Fill  ( nuRecE * 1000000.0, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-            if( nuRecE < 0.003  ) pHistNuE_3000keV->Fill ( nuRecE * 1000000.0, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-            if( nuRecE < 0.01   ) pHistNuE_10000keV->Fill( nuRecE * 1000000.0, 0.0001 * invWeight * totalRateSI / (double)totEvt );
+            if( nuRecE < 0.0006 ) pHistNuE_600keV->Fill  ( nuRecE * 1000000.0, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+            if( nuRecE < 0.003  ) pHistNuE_3000keV->Fill ( nuRecE * 1000000.0, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+            if( nuRecE < 0.01   ) pHistNuE_10000keV->Fill( nuRecE * 1000000.0, invWeight * totalRateSI / (double)totEvt * CORRECTION );
         }
     }
 
