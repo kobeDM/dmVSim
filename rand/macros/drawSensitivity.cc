@@ -1,8 +1,8 @@
 #include "inc/shinclude.h"
 
 const double EXPOSURE_F  = 0.155 * 0.78  * 1.0 * 31536000.0; // [SF6 density (20 Torr) : kg/m3] * [F fraction in SF6] * volume [m3] * 1 year [sec]
-const double EXPOSURE_p  = 0.1   * 0.016       * 31536000.0; // [NIT density           : kg   ] * [p fraction in NIT]                 * 1 year [sec]
-const double EXPOSURE_Ag = 0.1   * 0.44        * 31536000.0; // [NIT density           : kg   ] * [p fraction in NIT]                 * 1 year [sec]
+const double EXPOSURE_p  = 0.1   * 0.016       * 31536000.0; // [NIT density           : kg   ] * [p fraction in NIT]               * 1 year [sec]
+const double EXPOSURE_Ag = 0.1   * 0.44        * 31536000.0; // [NIT density           : kg   ] * [p fraction in NIT]               * 1 year [sec]
 
 class CRDMParam
 {
@@ -60,34 +60,40 @@ void drawSensitivity( const String& targetDir )
         paramArr.push_back( pParam );
     }
 
+    /*
     // debug
-    // for( auto pParam : paramArr ) {
-    //     if( pParam == nullptr ) continue;
-    //     std::cout << pParam->m_profile << "\t"
-    //               << pParam->m_element << "\t"
-    //               << pParam->m_mass    << "\n";
-    // }
-    
-    double mass[10]           = {};
-    double massNFW[10]        = {};
-    double massPIT[10]        = {};
-    double massEIN[10]        = {};
-    double FOM_mass_F_NFW[10] = {};
-    double FOM_mass_F_EIN[10] = {};
-    double FOM_mass_F_PIT[10] = {};
-    double FOM_mass_p_NFW[10] = {};
-    double FOM_mass_p_EIN[10] = {};
-    double FOM_mass_p_PIT[10] = {};
+    for( auto pParam : paramArr ) {
+        if( pParam == nullptr ) continue;
+        std::cout << pParam->m_profile << "\t"
+                  << pParam->m_element << "\t"
+                  << pParam->m_mass    << "\t"
+                  << pParam->m_nTotalSI << "\t"
+                  << pParam->m_nPlusSI << "\t"
+                  << pParam->m_nTotalSD << "\t"
+                  << pParam->m_nPlusSD << "\n";
+    }
+    */
+
+    double mass[10]            = {};
+    double massNFW[10]         = {};
+    double massPIT[10]         = {};
+    double massEIN[10]         = {};
+    double FOM_mass_F_NFW[10]  = {};
+    double FOM_mass_F_EIN[10]  = {};
+    double FOM_mass_F_PIT[10]  = {};
+    double FOM_mass_p_NFW[10]  = {};
+    double FOM_mass_p_EIN[10]  = {};
+    double FOM_mass_p_PIT[10]  = {};
     double FOM_mass_Ag_NFW[10] = {};
     double FOM_mass_Ag_EIN[10] = {};
     double FOM_mass_Ag_PIT[10] = {};
 
-    double FOM_mass_F_NFW_err[10] = {};
-    double FOM_mass_F_EIN_err[10] = {};
-    double FOM_mass_F_PIT_err[10] = {};
-    double FOM_mass_p_NFW_err[10] = {};
-    double FOM_mass_p_EIN_err[10] = {};
-    double FOM_mass_p_PIT_err[10] = {};
+    double FOM_mass_F_NFW_err[10]  = {};
+    double FOM_mass_F_EIN_err[10]  = {};
+    double FOM_mass_F_PIT_err[10]  = {};
+    double FOM_mass_p_NFW_err[10]  = {};
+    double FOM_mass_p_EIN_err[10]  = {};
+    double FOM_mass_p_PIT_err[10]  = {};
     double FOM_mass_Ag_NFW_err[10] = {};
     double FOM_mass_Ag_EIN_err[10] = {};
     double FOM_mass_Ag_PIT_err[10] = {};
@@ -95,8 +101,6 @@ void drawSensitivity( const String& targetDir )
     int massIdx = 0;
     for( auto pParam : paramArr ) {
         if( pParam == nullptr ) continue;
-
-        // if( pParam->m_mass > 0.001 ) continue;
 
         // calculate statistics including exposure (considering 1 year measurement using C/N-1.0 or NIT)
         double numTot  = 1.0, numPlus = 1.0;
@@ -168,6 +172,10 @@ void drawSensitivity( const String& targetDir )
         
         ++massIdx;
     }
+
+
+    std::cout << FOM_mass_F_NFW[2] << std::endl;
+    std::cout << FOM_mass_F_NFW[4] << std::endl;
 
     // sensitivity plots
     double exposureF[100]  = {};
@@ -294,11 +302,10 @@ void drawSensitivity( const String& targetDir )
     pLeg->AddEntry( &gFOM_mass_F_EIN, "Einasto", "lep" );
 
     // draw
-    /*
+
     TCanvas* cvsMass = new TCanvas( "cvsMass", "cvsMass", 800, 600 );
     cvsMass->SetLogx(1);
     mg_mass_F.Draw("AP");
-    // mg_mass_F.GetXaxis()->SetRangeUser( 0.00000001, 0.2 );
     mg_mass_F.GetXaxis()->SetLimits( 0.0002, 50.0 );
     mg_mass_F.GetYaxis()->SetRangeUser( -1.5, 1.5 );
     mg_mass_F.Draw("AP");
@@ -307,29 +314,37 @@ void drawSensitivity( const String& targetDir )
     l.SetLineStyle( 2 );
     l.Draw( );
     pLeg->Draw( );
-    ShTUtil::CreateDrawText(  0.2, 0.85, "F, Spin dependent" );
+    ShTUtil::CreateDrawText( 0.2, 0.87, "F, Spin dependent" );
+    ShTUtil::CreateDrawText( 0.2, 0.80, "#sigma_{#chi-p} = 10^{-32} cm");
     cvsMass->SaveAs(Form("%s/asymm_mass_F.png", targetDir.c_str( )));
+    cvsMass->SaveAs(Form("%s/asymm_mass_F.pdf", targetDir.c_str( )));
+    cvsMass->SaveAs(Form("%s/asymm_mass_F.eps", targetDir.c_str( )));
 
     mg_mass_p.Draw("AP");
-    // mg_mass_p.GetXaxis()->SetRangeUser( 0.00000001, 0.2 );
     mg_mass_p.GetXaxis()->SetLimits( 0.0002, 50.0 );
     mg_mass_p.GetYaxis()->SetRangeUser( -1.5, 1.5 );
     mg_mass_p.Draw("AP");
     l.Draw( );
     pLeg->Draw( );
-    ShTUtil::CreateDrawText(  0.2, 0.85, "p, Spin independent" );
+    ShTUtil::CreateDrawText( 0.2, 0.87, "p, Spin independent" );
+    ShTUtil::CreateDrawText( 0.2, 0.80, "#sigma_{#chi-p} = 10^{-32} cm");
     cvsMass->SaveAs(Form("%s/asymm_mass_p.png", targetDir.c_str( )));
+    cvsMass->SaveAs(Form("%s/asymm_mass_p.pdf", targetDir.c_str( )));
+    cvsMass->SaveAs(Form("%s/asymm_mass_p.eps", targetDir.c_str( )));
 
     mg_mass_Ag.Draw("AP");
-    // mg_mass_Ag.GetXaxis()->SetRangeUser( 0.00000001, 0.2 );
     mg_mass_Ag.GetXaxis()->SetLimits( 0.0002, 50.0 );
     mg_mass_Ag.GetYaxis()->SetRangeUser( -1.5, 1.5 );
     mg_mass_Ag.Draw("AP");
     l.Draw( );
     pLeg->Draw( );
-    ShTUtil::CreateDrawText(  0.2, 0.85, "Ag, Spin independent" );
+    ShTUtil::CreateDrawText( 0.2, 0.87, "Ag, Spin independent" );
+    ShTUtil::CreateDrawText( 0.2, 0.80, "#sigma_{#chi-p} = 10^{-32} cm");
     cvsMass->SaveAs(Form("%s/asymm_mass_Ag.png", targetDir.c_str( )));
-    */
+    cvsMass->SaveAs(Form("%s/asymm_mass_Ag.pdf", targetDir.c_str( )));
+    cvsMass->SaveAs(Form("%s/asymm_mass_Ag.eps", targetDir.c_str( )));
+
+    delete cvsMass;
 
     TGraph gZ_exposure_F_NFW_mass1( 100, exposureF, Z_exposure_F_NFW_mass1 );
     TGraph gZ_exposure_F_NFW_mass2( 100, exposureF, Z_exposure_F_NFW_mass2 );
@@ -372,7 +387,6 @@ void drawSensitivity( const String& targetDir )
     gZ_exposure_Ag_PIT_mass2.SetLineColor( kBlue );  
     gZ_exposure_Ag_EIN_mass1.SetLineColor( kViolet );
     gZ_exposure_Ag_EIN_mass2.SetLineColor( kViolet );
-
 
     gZ_exposure_F_NFW_mass1.SetLineWidth(2);
     gZ_exposure_F_NFW_mass2.SetLineWidth(2);
@@ -430,35 +444,46 @@ void drawSensitivity( const String& targetDir )
     mg_Z_Ag.Add( &gZ_exposure_Ag_EIN_mass1 );
     mg_Z_Ag.Add( &gZ_exposure_Ag_EIN_mass2 );
 
-    TLegend* pLegZ = ShTUtil::CreateLegend( 0.2, 0.55, 0.7, 0.85 );
-    pLegZ->AddEntry( &gZ_exposure_F_NFW_mass1, "NFW #it{m}_{DM} = 100 keV", "l" );
-    pLegZ->AddEntry( &gZ_exposure_F_NFW_mass2, "NFW #it{m}_{DM} = 1 keV", "l" );
-    pLegZ->AddEntry( &gZ_exposure_F_PIT_mass1, "Pseudo Iso-Thermal #it{m}_{DM} = 100 keV", "l" );
-    pLegZ->AddEntry( &gZ_exposure_F_PIT_mass2, "Pseudo Iso-Thermal #it{m}_{DM} = 1 keV", "l" );
-    pLegZ->AddEntry( &gZ_exposure_F_EIN_mass1, "Einasto #it{m}_{DM} = 100 keV", "l" );
-    pLegZ->AddEntry( &gZ_exposure_F_EIN_mass2, "Einasto #it{m}_{DM} = 1 keV", "l" );
+    TLegend* pLegZ = ShTUtil::CreateLegend( 0.2, 0.55, 0.7, 0.82 );
+    pLegZ->AddEntry( &gZ_exposure_F_NFW_mass1, "NFW   #it{m}_{DM} = 100 keV", "l" );
+    pLegZ->AddEntry( &gZ_exposure_F_NFW_mass2, "NFW   #it{m}_{DM} = 1 keV", "l" );
+    pLegZ->AddEntry( &gZ_exposure_F_PIT_mass1, "Pseudo-Isothermal   #it{m}_{DM} = 100 keV", "l" );
+    pLegZ->AddEntry( &gZ_exposure_F_PIT_mass2, "Pseudo-Isothermal   #it{m}_{DM} = 1 keV", "l" );
+    pLegZ->AddEntry( &gZ_exposure_F_EIN_mass1, "Einasto   #it{m}_{DM} = 100 keV", "l" );
+    pLegZ->AddEntry( &gZ_exposure_F_EIN_mass2, "Einasto   #it{m}_{DM} = 1 keV", "l" );
     
     TCanvas* cvsZ = new TCanvas( "cvsZ", "cvsZ", 800, 600 );
     mg_Z_F.Draw( "AC" );
     mg_Z_F.GetYaxis()->SetRangeUser( 0.0, Z_exposure_F_EIN_mass1[99] * 1.5);
     mg_Z_F.Draw( "AC" );
     pLegZ->Draw( );
-    ShTUtil::CreateDrawText(0.2, 0.87, "F, Spin dependent");
+    ShTUtil::CreateDrawText(0.2, 0.87, "F, Spin dependent" );
+    ShTUtil::CreateDrawText(0.7, 0.87, "#sigma_{#chi-p} = 10^{-32} cm");
     cvsZ->SaveAs(Form("%s/z_F.png", targetDir.c_str( )));
+    cvsZ->SaveAs(Form("%s/z_F.pdf", targetDir.c_str( )));
+    cvsZ->SaveAs(Form("%s/z_F.eps", targetDir.c_str( )));
 
     mg_Z_p.Draw( "AC" );
     mg_Z_p.GetYaxis()->SetRangeUser( 0.0, Z_exposure_p_EIN_mass2[99] * 1.5);
     mg_Z_p.Draw( "AC" );
     pLegZ->Draw( );
     ShTUtil::CreateDrawText(0.2, 0.87, "p, Spin independent");
+    ShTUtil::CreateDrawText(0.7, 0.87, "#sigma_{#chi-p} = 10^{-32} cm");
     cvsZ->SaveAs(Form("%s/z_p.png", targetDir.c_str( )));
+    cvsZ->SaveAs(Form("%s/z_p.pdf", targetDir.c_str( )));
+    cvsZ->SaveAs(Form("%s/z_p.eps", targetDir.c_str( )));
 
     mg_Z_Ag.Draw( "AC" );
     mg_Z_Ag.GetYaxis()->SetRangeUser( 0.0, Z_exposure_Ag_EIN_mass1[99] * 1.5);
     mg_Z_Ag.Draw( "AC" );
     pLegZ->Draw( );
     ShTUtil::CreateDrawText(0.2, 0.87, "Ag, Spin independent");
+    ShTUtil::CreateDrawText(0.7, 0.87, "#sigma_{#chi-p} = 10^{-32} cm");
     cvsZ->SaveAs(Form("%s/z_Ag.png", targetDir.c_str( )));
+    cvsZ->SaveAs(Form("%s/z_Ag.pdf", targetDir.c_str( )));
+    cvsZ->SaveAs(Form("%s/z_Ag.eps", targetDir.c_str( )));
+
+    delete cvsZ;
 
     return;
 }
@@ -521,7 +546,6 @@ bool getMass( const String& input, double& output )
     size_t pos = input.find( "dm" );
     String massStr = input.substr( pos+2, input.length( ) );
 
-    // DEBUG(massStr);    
     retVal = true;
     if     ( massStr == "10"       ) output = 10.0;
     else if( massStr == "1"        ) output = 1.0;
