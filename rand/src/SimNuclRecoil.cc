@@ -168,11 +168,13 @@ int main( int argc, char** argv )
     double velocity = 0.0, theta = 0.0, phi = 0.0;
     double dmM = 10.0;
     double invWeight = 1.0;
+    double xsection = 1.0;
     pInTree->SetBranchAddress( "velocity",  &velocity  );
     pInTree->SetBranchAddress( "theta",     &theta     );
     pInTree->SetBranchAddress( "phi",       &phi       );
     pInTree->SetBranchAddress( "dmM",       &dmM       );
     pInTree->SetBranchAddress( "invWeight", &invWeight );
+    pInTree->SetBranchAddress( "xsection",  &xsection  );
 
     double massNumber = nuM / 0.932;
     double muN = dmM * nuM / ( dmM + nuM);
@@ -180,8 +182,8 @@ int main( int argc, char** argv )
 
     // calculate weight
     double convFactorPerKg = 6.02e+23 / massNumber * 1e+3;
-    double totalRateSI = invWeight * 1e-30 * muN / mup * massNumber * massNumber * convFactorPerKg * 60.0 * 60.0 * 24.0;  // 1/kg/day
-    double totalRateSD = invWeight * 1e-30 * muN / mup * spinFactor / 0.75 * convFactorPerKg * 60.0 * 60.0 * 24.0;        // 1/kg/day
+    double totalRateSI = invWeight * xsection * muN / mup * massNumber * massNumber * convFactorPerKg * 60.0 * 60.0 * 24.0;  // 1/kg/day
+    double totalRateSD = invWeight * xsection * muN / mup * spinFactor / 0.75 * convFactorPerKg * 60.0 * 60.0 * 24.0;        // 1/kg/day
     
     // open output file
     TFile outputFile( output.c_str( ), "RECREATE" );
