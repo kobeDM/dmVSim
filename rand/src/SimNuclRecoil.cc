@@ -175,6 +175,7 @@ int main( int argc, char** argv )
     pInTree->SetBranchAddress( "dmM",       &dmM       );
     pInTree->SetBranchAddress( "invWeight", &invWeight );
     pInTree->SetBranchAddress( "xsection",  &xsection  );
+    pInTree->GetEntry( 0 );
 
     double massNumber = nuM / 0.932;
     double muN = dmM * nuM / ( dmM + nuM);
@@ -184,7 +185,7 @@ int main( int argc, char** argv )
     double convFactorPerKg = 6.02e+23 / massNumber * 1e+3;
     double totalRateSI = invWeight * xsection * muN / mup * massNumber * massNumber * convFactorPerKg * 60.0 * 60.0 * 24.0;  // 1/kg/day
     double totalRateSD = invWeight * xsection * muN / mup * spinFactor / 0.75 * convFactorPerKg * 60.0 * 60.0 * 24.0;        // 1/kg/day
-    
+
     // open output file
     TFile outputFile( output.c_str( ), "RECREATE" );
     TTree* pOutTree = new TTree( "tree", "tree" );
@@ -195,6 +196,7 @@ int main( int argc, char** argv )
     pOutTree->Branch( "muN",              &muN               );
     pOutTree->Branch( "mup",              &mup               );
     pOutTree->Branch( "massNumber",       &massNumber        );
+    pOutTree->Branch( "xsection",         &xsection          );
     pOutTree->Branch( "totalRateSI",      &totalRateSI       ); // 1/kg/day
     pOutTree->Branch( "totalRateSD",      &totalRateSD       ); // 1/kg/day
 
