@@ -99,6 +99,7 @@ void drawSensitivity( const String& targetDir )
     double FOM_mass_Ag_PIT_err[10] = {};
 
     int massIdx = 0;
+    double scaling = 20.0;
     for( auto pParam : paramArr ) {
         if( pParam == nullptr ) continue;
 
@@ -116,6 +117,10 @@ void drawSensitivity( const String& targetDir )
             numTot = pParam->m_nTotalSI * EXPOSURE_Ag / EXPOSURE_F;
             numPlus = pParam->m_nPlusSI * EXPOSURE_Ag / EXPOSURE_F;
         }
+        
+        // assume 5 year data taking
+        numTot  *= scaling;
+        numPlus *= scaling;
 
         double ratio = numPlus / numTot;
         double FOM = 2.0*ratio - 1.0;
@@ -173,7 +178,6 @@ void drawSensitivity( const String& targetDir )
         ++massIdx;
     }
 
-
     std::cout << FOM_mass_F_NFW[2] << std::endl;
     std::cout << FOM_mass_F_NFW[4] << std::endl;
 
@@ -203,32 +207,33 @@ void drawSensitivity( const String& targetDir )
     double exposureF_year  = EXPOSURE_F  / 31536000.0; // kg * year
     double exposureP_year  = EXPOSURE_p  / 31536000.0; // kg * year
     double exposureAg_year = EXPOSURE_Ag / 31536000.0; // kg * year
+    double den = 20.0;
     for( int i = 0; i < 100; ++i ) {
-        exposureF[i]  = exposureF_year * static_cast<double>(i) / 20.0;
-        exposureP[i]  = exposureP_year * static_cast<double>(i) / 20.0;
-        exposureAg[i] = exposureAg_year * static_cast<double>(i) / 20.0;
+        exposureF[i]  = exposureF_year  * static_cast<double>(i) * scaling / den;
+        exposureP[i]  = exposureP_year  * static_cast<double>(i) * scaling / den;
+        exposureAg[i] = exposureAg_year * static_cast<double>(i) * scaling / den;
         
         // mass1 = 100 keV, mass2 = 1 keV
-        Z_exposure_F_NFW_mass1[i] = (FOM_mass_F_NFW[2] / FOM_mass_F_NFW_err[2]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_F_NFW_mass2[i] = (FOM_mass_F_NFW[4] / FOM_mass_F_NFW_err[4]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_F_PIT_mass1[i] = (FOM_mass_F_PIT[2] / FOM_mass_F_PIT_err[2]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_F_PIT_mass2[i] = (FOM_mass_F_PIT[4] / FOM_mass_F_PIT_err[4]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_F_EIN_mass1[i] = (FOM_mass_F_EIN[2] / FOM_mass_F_EIN_err[2]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_F_EIN_mass2[i] = (FOM_mass_F_EIN[4] / FOM_mass_F_EIN_err[4]) * sqrt( static_cast<double>(i) / 20.0 );
+        Z_exposure_F_NFW_mass1[i] = (FOM_mass_F_NFW[2] / FOM_mass_F_NFW_err[2]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_F_NFW_mass2[i] = (FOM_mass_F_NFW[4] / FOM_mass_F_NFW_err[4]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_F_PIT_mass1[i] = (FOM_mass_F_PIT[2] / FOM_mass_F_PIT_err[2]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_F_PIT_mass2[i] = (FOM_mass_F_PIT[4] / FOM_mass_F_PIT_err[4]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_F_EIN_mass1[i] = (FOM_mass_F_EIN[2] / FOM_mass_F_EIN_err[2]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_F_EIN_mass2[i] = (FOM_mass_F_EIN[4] / FOM_mass_F_EIN_err[4]) * sqrt( static_cast<double>(i) / den );
 
-        Z_exposure_p_NFW_mass1[i] = (FOM_mass_p_NFW[2] / FOM_mass_p_NFW_err[2]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_p_NFW_mass2[i] = (FOM_mass_p_NFW[4] / FOM_mass_p_NFW_err[4]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_p_PIT_mass1[i] = (FOM_mass_p_PIT[2] / FOM_mass_p_PIT_err[2]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_p_PIT_mass2[i] = (FOM_mass_p_PIT[4] / FOM_mass_p_PIT_err[4]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_p_EIN_mass1[i] = (FOM_mass_p_EIN[2] / FOM_mass_p_EIN_err[2]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_p_EIN_mass2[i] = (FOM_mass_p_EIN[4] / FOM_mass_p_EIN_err[4]) * sqrt( static_cast<double>(i) / 20.0 );
+        Z_exposure_p_NFW_mass1[i] = (FOM_mass_p_NFW[2] / FOM_mass_p_NFW_err[2]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_p_NFW_mass2[i] = (FOM_mass_p_NFW[4] / FOM_mass_p_NFW_err[4]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_p_PIT_mass1[i] = (FOM_mass_p_PIT[2] / FOM_mass_p_PIT_err[2]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_p_PIT_mass2[i] = (FOM_mass_p_PIT[4] / FOM_mass_p_PIT_err[4]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_p_EIN_mass1[i] = (FOM_mass_p_EIN[2] / FOM_mass_p_EIN_err[2]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_p_EIN_mass2[i] = (FOM_mass_p_EIN[4] / FOM_mass_p_EIN_err[4]) * sqrt( static_cast<double>(i) / den );
 
-        Z_exposure_Ag_NFW_mass1[i] = (FOM_mass_Ag_NFW[2] / FOM_mass_Ag_NFW_err[2]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_Ag_NFW_mass2[i] = (FOM_mass_Ag_NFW[4] / FOM_mass_Ag_NFW_err[4]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_Ag_PIT_mass1[i] = (FOM_mass_Ag_PIT[2] / FOM_mass_Ag_PIT_err[2]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_Ag_PIT_mass2[i] = (FOM_mass_Ag_PIT[4] / FOM_mass_Ag_PIT_err[4]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_Ag_EIN_mass1[i] = (FOM_mass_Ag_EIN[2] / FOM_mass_Ag_EIN_err[2]) * sqrt( static_cast<double>(i) / 20.0 );
-        Z_exposure_Ag_EIN_mass2[i] = (FOM_mass_Ag_EIN[4] / FOM_mass_Ag_EIN_err[4]) * sqrt( static_cast<double>(i) / 20.0 );
+        Z_exposure_Ag_NFW_mass1[i] = (FOM_mass_Ag_NFW[2] / FOM_mass_Ag_NFW_err[2]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_Ag_NFW_mass2[i] = (FOM_mass_Ag_NFW[4] / FOM_mass_Ag_NFW_err[4]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_Ag_PIT_mass1[i] = (FOM_mass_Ag_PIT[2] / FOM_mass_Ag_PIT_err[2]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_Ag_PIT_mass2[i] = (FOM_mass_Ag_PIT[4] / FOM_mass_Ag_PIT_err[4]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_Ag_EIN_mass1[i] = (FOM_mass_Ag_EIN[2] / FOM_mass_Ag_EIN_err[2]) * sqrt( static_cast<double>(i) / den );
+        Z_exposure_Ag_EIN_mass2[i] = (FOM_mass_Ag_EIN[4] / FOM_mass_Ag_EIN_err[4]) * sqrt( static_cast<double>(i) / den );
     }
 
 
@@ -302,15 +307,14 @@ void drawSensitivity( const String& targetDir )
     pLeg->AddEntry( &gFOM_mass_F_EIN, "Einasto", "lep" );
 
     // draw
-
     TCanvas* cvsMass = new TCanvas( "cvsMass", "cvsMass", 800, 600 );
     cvsMass->SetLogx(1);
     mg_mass_F.Draw("AP");
-    mg_mass_F.GetXaxis()->SetLimits( 0.0002, 50.0 );
-    mg_mass_F.GetYaxis()->SetRangeUser( -1.5, 1.5 );
+    mg_mass_F.GetXaxis()->SetLimits( 0.00002, 50.0 );
+    mg_mass_F.GetYaxis()->SetRangeUser( -5.5, 5.5 );
     mg_mass_F.Draw("AP");
 
-    TLine l(0.0002, 0.0, 50.0, 0.0 );
+    TLine l(0.00002, 0.0, 50.0, 0.0 );
     l.SetLineStyle( 2 );
     l.Draw( );
     pLeg->Draw( );
@@ -321,8 +325,8 @@ void drawSensitivity( const String& targetDir )
     cvsMass->SaveAs(Form("%s/asymm_mass_F.eps", targetDir.c_str( )));
 
     mg_mass_p.Draw("AP");
-    mg_mass_p.GetXaxis()->SetLimits( 0.0002, 50.0 );
-    mg_mass_p.GetYaxis()->SetRangeUser( -1.5, 1.5 );
+    mg_mass_p.GetXaxis()->SetLimits( 0.00002, 50.0 );
+    mg_mass_p.GetYaxis()->SetRangeUser( -5.5, 5.5 );
     mg_mass_p.Draw("AP");
     l.Draw( );
     pLeg->Draw( );
@@ -333,8 +337,8 @@ void drawSensitivity( const String& targetDir )
     cvsMass->SaveAs(Form("%s/asymm_mass_p.eps", targetDir.c_str( )));
 
     mg_mass_Ag.Draw("AP");
-    mg_mass_Ag.GetXaxis()->SetLimits( 0.0002, 50.0 );
-    mg_mass_Ag.GetYaxis()->SetRangeUser( -1.5, 1.5 );
+    mg_mass_Ag.GetXaxis()->SetLimits( 0.00002, 50.0 );
+    mg_mass_Ag.GetYaxis()->SetRangeUser( -5.5, 5.5 );
     mg_mass_Ag.Draw("AP");
     l.Draw( );
     pLeg->Draw( );
@@ -454,7 +458,7 @@ void drawSensitivity( const String& targetDir )
     
     TCanvas* cvsZ = new TCanvas( "cvsZ", "cvsZ", 800, 600 );
     mg_Z_F.Draw( "AC" );
-    mg_Z_F.GetYaxis()->SetRangeUser( 0.0, Z_exposure_F_EIN_mass1[99] * 1.5);
+    mg_Z_F.GetYaxis()->SetRangeUser( 0.0, Z_exposure_F_EIN_mass2[99] * 1.5);
     mg_Z_F.Draw( "AC" );
     pLegZ->Draw( );
     ShTUtil::CreateDrawText(0.2, 0.87, "F, Spin dependent" );
@@ -474,7 +478,7 @@ void drawSensitivity( const String& targetDir )
     cvsZ->SaveAs(Form("%s/z_p.eps", targetDir.c_str( )));
 
     mg_Z_Ag.Draw( "AC" );
-    mg_Z_Ag.GetYaxis()->SetRangeUser( 0.0, Z_exposure_Ag_EIN_mass1[99] * 1.5);
+    mg_Z_Ag.GetYaxis()->SetRangeUser( 0.0, Z_exposure_Ag_EIN_mass2[99] * 1.5);
     mg_Z_Ag.Draw( "AC" );
     pLegZ->Draw( );
     ShTUtil::CreateDrawText(0.2, 0.87, "Ag, Spin independent");
