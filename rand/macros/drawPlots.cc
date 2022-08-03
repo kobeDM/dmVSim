@@ -3,10 +3,7 @@
 // const double EXPOSURE = 0.15 * 1.3e+06; // 
 const double EXPOSURE = 0.155 * 0.78 * 1.0 * 31536000.0; // [SF6 density (20 Torr) : kg/m3] * [F occupancy for SF6] * volume [m3] * 1 year [sec]
 
-double getThetaWeight( const double& theta, 
-                       const int&    bin,
-                       const double& min,
-                       const double& max );
+const double CORRECTION = 1.0; // should not considered any corrections if our calculation is correct!!!
 
 void drawPlots( const String& inputFile, const String& outputDir, const String& plotName )
 {
@@ -41,6 +38,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     double dmInjTheta = 0.0, dmInjPhi = 0.0;
 
     double nuRecTheta = 0.0, nuRecPhi = 0.0;
+    double nuRecCosTheta = 0.0;
     double nuRecE = 0.0;
 
     double formFactorSq = 0.0;
@@ -50,29 +48,30 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
 
     int atom = 0;
 
-    pTree->SetBranchAddress( "dmM",          &dmM );
+    pTree->SetBranchAddress( "dmM",           &dmM );
 
-    pTree->SetBranchAddress( "dmInjV",       &dmInjV );
-    pTree->SetBranchAddress( "dmInjTheta",   &dmInjTheta );
-    pTree->SetBranchAddress( "dmInjPhi",     &dmInjPhi );
+    pTree->SetBranchAddress( "dmInjV",        &dmInjV );
+    pTree->SetBranchAddress( "dmInjTheta",    &dmInjTheta );
+    pTree->SetBranchAddress( "dmInjPhi",      &dmInjPhi );
     
-    pTree->SetBranchAddress( "nuRecE",       &nuRecE );
-    pTree->SetBranchAddress( "nuRecTheta",   &nuRecTheta );
-    pTree->SetBranchAddress( "nuRecPhi",     &nuRecPhi );
+    pTree->SetBranchAddress( "nuRecE",        &nuRecE );
+    pTree->SetBranchAddress( "nuRecTheta",    &nuRecTheta );
+    pTree->SetBranchAddress( "nuRecCosTheta", &nuRecCosTheta );
+    pTree->SetBranchAddress( "nuRecPhi",      &nuRecPhi );
 
-    pTree->SetBranchAddress( "formFactorSq", &formFactorSq );
-    pTree->SetBranchAddress( "rndm",         &rndm );
+    pTree->SetBranchAddress( "formFactorSq",  &formFactorSq );
+    pTree->SetBranchAddress( "rndm",          &rndm );
 
-    pTree->SetBranchAddress( "invWeight",    &invWeight );
-    pTree->SetBranchAddress( "totalRateSI",  &totalRateSI );
-    pTree->SetBranchAddress( "totalRateSD",  &totalRateSD );
+    pTree->SetBranchAddress( "invWeight",     &invWeight );
+    pTree->SetBranchAddress( "totalRateSI",   &totalRateSI );
+    pTree->SetBranchAddress( "totalRateSD",   &totalRateSD );
 
-    pTree->SetBranchAddress( "atom",         &atom );
+    pTree->SetBranchAddress( "atom",          &atom );
 
-    TH2D* pHist2DDMDir    = new TH2D( "hist2DDMDir",    "hist2DDMDir",      100, -180, 180, 100, -90, 90 );
-    TH2D* pHist2DDMCosGCV = new TH2D( "hist2DDMCosGCV", "hist2D2DDMCosGCV", 100, -1.0, 1.0, 100, 0, 0.1 ); // v/c
+    TH2D* pHist2DDMDir    = new TH2D( "hist2DDMDir",    "hist2DDMDir",      180, -180.0, 180.0, 179, -89.5, 89.5 );
+    TH2D* pHist2DDMCosGCV = new TH2D( "hist2DDMCosGCV", "hist2D2DDMCosGCV", 180, -1.0, 1.0, 100, 0.0, 0.1 ); // v/c
 
-    TH2D* pHist2DNuDir    = new TH2D( "hist2DNuDir",    "hist2DNuDir",      100, -180, 180, 100, -90, 90 );
+    TH2D* pHist2DNuDir    = new TH2D( "hist2DNuDir",    "hist2DNuDir",      180, -180.0, 180.0, 179, -89.5, 89.5 );
     TH2D* pHist2DNuCosGCE = new TH2D( "hist2DNuCosGCE", "hist2DNuCosGCE",   100, -1.0, 1.0, 100, 0.0, 0.1 ); // MeV
 
     TH1D* pHistNuCosGC_E100keV = new TH1D( "histNuCosGC_E100keV", "histNuCosGC_E100keV", 40, -1.0, 1.0 );
@@ -118,57 +117,54 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
         pHist2DDMCosGCV->Fill( dmCosGC, dmInjV / ( TMath::C( ) * 0.001 ) );
         
         if( rndm <= formFactorSq ) {
-            double binCorrThetaWeight = getThetaWeight( nuRecTheta * 180.0 / TMath::Pi( ), 100, -90.0, 90.0 );
-
-            pHist2DNuDir->Fill( nuPhiCorr * 180.0 / TMath::Pi( ), nuRecTheta * 180.0 / TMath::Pi( ) );
-            // pHist2DNuDir->Fill( nuPhiCorr * 180.0 / TMath::Pi( ), nuRecTheta * 180.0 / TMath::Pi( ), binCorrThetaWeight ); // debug
+            if( nuRecCosTheta < 0.001 ) nuRecCosTheta = 0.001;
+            pHist2DNuDir->Fill( nuPhiCorr * 180.0 / TMath::Pi( ), nuRecTheta * 180.0 / TMath::Pi( ), 1.0 / nuRecCosTheta ); // debug
 
             double nuRecCosGC = cos( nuRecTheta ) *cos( nuPhiCorr );
-            pHist2DNuCosGCE->Fill( nuRecCosGC, nuRecE*1000.0 );
 
-            if     ( nuRecE > 1.0     ) { 
+            if     ( nuRecE > 1.0     ) {  // > 1 GeV
                 pHistNuCosGC_EMore->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_EMore->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt ); 
-                pHistNuCosGCRateSD_EMore->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt ); 
+                pHistNuCosGCRateSI_EMore->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSD_EMore->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION ); 
             }
-            else if( nuRecE > 0.1     ) { 
+            else if( nuRecE > 0.1     ) { // 100 MeV < m < 1 GeV
                 pHistNuCosGC_E1GeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E1GeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt ); 
-                pHistNuCosGCRateSD_E1GeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt ); 
+                pHistNuCosGCRateSI_E1GeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSD_E1GeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION ); 
             }
-            else if( nuRecE > 0.01    ) {
+            else if( nuRecE > 0.01    ) { // 10 MeV < m < 100 MeV
                 pHistNuCosGC_E100MeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E100MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-                pHistNuCosGCRateSD_E100MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
+                pHistNuCosGCRateSI_E100MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E100MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
             }
-            else if( nuRecE > 0.001   ) {
+            else if( nuRecE > 0.001   ) { // 1 MeV < m < 10 MeV
                 pHistNuCosGC_E10MeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E10MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt ); 
-                pHistNuCosGCRateSD_E10MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt ); 
+                pHistNuCosGCRateSI_E10MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSD_E10MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION ); 
             }
-            else if( nuRecE > 0.0001  ) { 
+            else if( nuRecE > 0.0001  ) { // 100 keV < m < 1 MeV
                 pHistNuCosGC_E1MeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E1MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-                pHistNuCosGCRateSD_E1MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
+                pHistNuCosGCRateSI_E1MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E1MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
             }
-            else if( nuRecE > 0.00001 ) { 
+            else if( nuRecE > 0.00001 ) { // 10 keV < m < 100 keV
                 pHistNuCosGC_E100keV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E100keV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-                pHistNuCosGCRateSD_E100keV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
+                pHistNuCosGCRateSI_E100keV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E100keV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
             }
 
             if( nuRecE > 0.0001 && nuRecE < 0.0006 ) {
-                pHistNuCosGCRateSI_E600keV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-                pHistNuCosGCRateSD_E600keV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
+                pHistNuCosGCRateSI_E600keV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E600keV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
             }
             if( nuRecE > 0.001 && nuRecE < 0.003 ) {
-                pHistNuCosGCRateSI_E3MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-                pHistNuCosGCRateSD_E3MeV->Fill( nuRecCosGC, 0.0001 * invWeight * totalRateSD / (double)totEvt );
+                pHistNuCosGCRateSI_E3MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E3MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
             }
 
-            if( nuRecE < 0.0006 ) pHistNuE_600keV->Fill  ( nuRecE * 1000000.0, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-            if( nuRecE < 0.003  ) pHistNuE_3000keV->Fill ( nuRecE * 1000000.0, 0.0001 * invWeight * totalRateSI / (double)totEvt );
-            if( nuRecE < 0.01   ) pHistNuE_10000keV->Fill( nuRecE * 1000000.0, 0.0001 * invWeight * totalRateSI / (double)totEvt );
+            if( nuRecE < 0.0006 ) pHistNuE_600keV->Fill  ( nuRecE * 1000000.0, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+            if( nuRecE < 0.003  ) pHistNuE_3000keV->Fill ( nuRecE * 1000000.0, invWeight * totalRateSI / (double)totEvt * CORRECTION );
+            if( nuRecE < 0.01   ) pHistNuE_10000keV->Fill( nuRecE * 1000000.0, invWeight * totalRateSI / (double)totEvt * CORRECTION );
         }
     }
 
@@ -397,6 +393,14 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     double nPlusSI = pHistNuCosGCRateSI_tot->Integral( 21, 40 ) * EXPOSURE;
     double nPlusSD = pHistNuCosGCRateSD_tot->Integral( 21, 40 ) * EXPOSURE;
 
+    if( atom == 11 ) { // only in case of Ag, threshold is set to be 100 keV
+        //        pHistNuCosGCRateSI_E600keV->
+        nTotalSI = pHistNuCosGCRateSI_E600keV->Integral( 1, 40 ) * EXPOSURE;
+        nTotalSD = pHistNuCosGCRateSD_E600keV->Integral( 1, 40 ) * EXPOSURE;
+        nPlusSI  = pHistNuCosGCRateSI_E600keV->Integral( 21, 40 ) * EXPOSURE;
+        nPlusSD  = pHistNuCosGCRateSD_E600keV->Integral( 21, 40 ) * EXPOSURE;
+    }
+
     double nFOMSI = nPlusSI / nTotalSI;
     double nFOMSD = nPlusSD / nTotalSD;
 
@@ -409,22 +413,4 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     ofs << plotName << "\t" << nTotalSI << "\t" << nPlusSI << "\t" << nFOMSI << "\t" << nFOMSIError << "\t" << nTotalSD << "\t" << nPlusSD << "\t" << nFOMSD << "\t" << nFOMSDError << "\t" << std::endl;
 
     return;
-}
-
-double getThetaWeight( const double& theta, 
-                       const int&    bin,
-                       const double& min,
-                       const double& max )
-{
-    double binCenter = 0.0;
-    double binWidth = (max - min) / static_cast< double >( bin );
-    
-    for( int i = 0; i < bin; ++i ) {
-        if( theta > min + static_cast< double >( i     ) * binWidth &&
-            theta < min + static_cast< double >( i + 1 ) * binWidth ) {
-            binCenter = min + static_cast< double >( i ) * binWidth + binWidth * 0.5;
-        }
-    }
-    
-    return 1.0 / cos( binCenter * TMath::Pi( ) / 180.0 );
 }

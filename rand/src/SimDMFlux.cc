@@ -23,7 +23,6 @@ int main( int argc, char** argv )
         abort( );
     }
     
-    double rhoScaleKPC = DM_RHO_SCALE / ( PC2CM*PC2CM*PC2CM ); // converted to [GeV / kpc^3]
 
     // get proton flux distribution
     if( readGalprop( CR_P_INPUT ) == false ) {
@@ -36,14 +35,20 @@ int main( int argc, char** argv )
     // return 0;
 
     TF3* pFunc = nullptr;
+    double rhoScaleKPC = 0.0, rScaleKPC = 0.0;
     if( profile == "NFW" ) {
         pFunc = new TF3( "flux", getDMNFWFlux, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, LOS_LIMIT, 8, 3 );
+        rhoScaleKPC = DM_RHO_SCALE_NFW / ( PC2CM*PC2CM*PC2CM ); // converted to [GeV / kpc^3]
+        rScaleKPC   = DM_R_SCALE_NFW;
     }
     else if( profile == "IT" ) {
         pFunc = new TF3( "flux", getDMIsoThermalFlux, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, LOS_LIMIT, 8, 3 );
+        rhoScaleKPC = DM_RHO_SCALE_PIT / ( PC2CM*PC2CM*PC2CM ); // converted to [GeV / kpc^3]
+        rScaleKPC   = DM_R_SCALE_PIT;
     }
     else if( profile == "EIN" ) {
-        pFunc = new TF3( "flux", getDMEinastoFlux, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, LOS_LIMIT, 8, 3 );         
+        pFunc = new TF3( "flux", getDMEinastoFlux, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 0.0, LOS_LIMIT, 8, 3 );                rhoScaleKPC = DM_RHO_SCALE_EIN / ( PC2CM*PC2CM*PC2CM ); // converted to [GeV / kpc^3]
+        rScaleKPC   = DM_R_SCALE_EIN;
     }
 
     pFunc->SetParameter( 0, PROTON_MASS       );
@@ -51,7 +56,7 @@ int main( int argc, char** argv )
     pFunc->SetParameter( 2, dmM               );
     pFunc->SetParameter( 3, PC2CM*PC2CM*1e-30 ); // assume sigma_DM = 10^-30 [1/cm^2]
     pFunc->SetParameter( 4, rhoScaleKPC       );
-    pFunc->SetParameter( 5, DM_R_SCALE        );
+    pFunc->SetParameter( 5, rScaleKPC         );
     pFunc->SetParameter( 6, SUN_DISTANCE      );
     pFunc->SetParameter( 7, LAMBDA_P          );
     
