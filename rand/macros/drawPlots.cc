@@ -1,9 +1,7 @@
 #include "inc/shinclude.h"
 
-// const double EXPOSURE = 0.15 * 1.3e+06; // 
 const double EXPOSURE = 0.155 * 0.78 * 1.0 * 31536000.0; // [SF6 density (20 Torr) : kg/m3] * [F occupancy for SF6] * volume [m3] * 1 year [sec]
-
-const double CORRECTION = 1.0; // should not considered any corrections if our calculation is correct!!!
+const double CORRECTION = 1.0; // should not considere any corrections if our calculation is correct!!!
 
 void drawPlots( const String& inputFile, const String& outputDir, const String& plotName )
 {
@@ -221,7 +219,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
 
     TH1D* pHistNuCosGCRateSI_tot = new TH1D( "histNuCosGCRateSI_tot",  "histNuCosGCRateSI_tot",  40, -1.0, 1.0 );
     TH1D* pHistNuCosGCRateSD_tot = new TH1D( "histNuCosGCRateSD_tot",  "histNuCosGCRateSD_tot",  40, -1.0, 1.0 );
-    TLegend* pLeg_SISD = ShTUtil::CreateLegend( 0.2, 0.65, 0.7, 0.9 );
+    TLegend* pLeg_SISD = ShTUtil::CreateLegend( 0.2, 0.67, 0.7, 0.92 );
     if( atom == 10 ) { // F
         pHistNuCosGCRateSI_E100keV->SetLineColor( kRed   );
         pHistNuCosGCRateSI_E1MeV->SetLineColor( kViolet   );
@@ -291,7 +289,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     max_histNuCosGC = pHistNuCosGCRateSI_tot->GetMaximum( );
     pHistNuCosGCRateSI_tot->GetXaxis( )->SetTitle( "cos#it{#gamma}_{GC}" );
     pHistNuCosGCRateSI_tot->GetYaxis( )->SetTitle( "Events / sec / kg" );
-    pHistNuCosGCRateSI_tot->GetYaxis( )->SetRangeUser( 0.0, max_histNuCosGC * 1.4 );
+    pHistNuCosGCRateSI_tot->GetYaxis( )->SetRangeUser( 0.0, max_histNuCosGC * 1.5 );
 
     pHistNuCosGCRateSI_tot    ->Draw( "hist" );
     if( atom == 10 ) {
@@ -310,15 +308,16 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     }
     pLeg_SISD->Draw( );
     
-    ShTUtil::CreateDrawText( 0.225, 0.61, "#sigma_{#chi - p} = 10^{-32} cm^{2}, Spin Independent" );
-    if     ( dmM < 0.001 ) ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf keV, %s recoil", dmM*1000000.0, atomStr.c_str( ) ) );
-    else if( dmM < 1.0   ) ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf MeV, %s recoil", dmM*1000.0, atomStr.c_str( ) ) );
-    else                   ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf GeV, %s recoil", dmM, atomStr.c_str( ) ) );
+    ShTUtil::CreateDrawText( 0.225, 0.62, "#sigma_{#chi - p} = 10^{-32} cm^{2}", 0.045 );
+    if     ( dmM < 0.001 ) ShTUtil::CreateDrawText( 0.225, 0.55, Form("#it{m}_{#chi} = %1.1lf keV", dmM*1000000.0 ), 0.045 );
+    else if( dmM < 1.0   ) ShTUtil::CreateDrawText( 0.225, 0.55, Form("#it{m}_{#chi} = %1.1lf MeV", dmM*1000.0 ), 0.045 );
+    else                   ShTUtil::CreateDrawText( 0.225, 0.55, Form("#it{m}_{#chi} = %1.1lf GeV", dmM ), 0.045 );
+    ShTUtil::CreateDrawText( 0.225, 0.48, Form("%s recoil, SI", atomStr.c_str( ) ), 0.045 );
 
     cvs.SaveAs( Form( "%s/%s_cosGCSI.png", subDir.c_str( ), plotName.c_str( ) ) );
 
     max_histNuCosGC = pHistNuCosGCRateSD_tot->GetMaximum( );
-    pHistNuCosGCRateSD_tot->GetYaxis( )->SetRangeUser( 0.0, max_histNuCosGC * 1.4 );
+    pHistNuCosGCRateSD_tot->GetYaxis( )->SetRangeUser( 0.0, max_histNuCosGC * 1.5 );
     pHistNuCosGCRateSD_tot->GetXaxis( )->SetTitle( "cos#it{#gamma}_{GC}" );
     pHistNuCosGCRateSD_tot->GetYaxis( )->SetTitle( "Events / sec / kg" );
 
@@ -339,10 +338,12 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     }
     pLeg_SISD->Draw( );
 
-    ShTUtil::CreateDrawText( 0.225, 0.61, "#sigma_{#chi - p} = 10^{-32} cm^{2}, Spin Dependent" );
-    if     ( dmM < 0.001 ) ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf keV, %s recoil", dmM*1000000.0, atomStr.c_str( ) ) );
-    else if( dmM < 1.0   ) ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf MeV, %s recoil", dmM*1000.0, atomStr.c_str( ) ) );
-    else                   ShTUtil::CreateDrawText( 0.225, 0.53, Form("#it{m}_{#chi} = %1.1lf GeV, %s recoil", dmM, atomStr.c_str( ) ) );
+    ShTUtil::CreateDrawText( 0.225, 0.62, "#sigma_{#chi - p} = 10^{-32} cm^{2}", 0.045 );
+    if     ( dmM < 0.001 ) ShTUtil::CreateDrawText( 0.225, 0.55, Form("#it{m}_{#chi} = %1.1lf keV", dmM*1000000.0 ), 0.045 );
+    else if( dmM < 1.0   ) ShTUtil::CreateDrawText( 0.225, 0.55, Form("#it{m}_{#chi} = %1.1lf MeV", dmM*1000.0 ), 0.045 );
+    else                   ShTUtil::CreateDrawText( 0.225, 0.55, Form("#it{m}_{#chi} = %1.1lf GeV", dmM ), 0.045 );
+    ShTUtil::CreateDrawText( 0.225, 0.48, Form("%s recoil, SD", atomStr.c_str( ) ), 0.045 );
+
     cvs.SaveAs( Form( "%s/%s_cosGCSD.png", subDir.c_str( ), plotName.c_str( ) ) );
 
     if( atom == 10 ) {
@@ -364,7 +365,13 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     cvs.SaveAs( Form( "%s/%s_nuE.png", subDir.c_str( ), plotName.c_str( ) ) );
 
     // 2D plots
-    cvs.SetGridx( 1 ); cvs.SetGridy( 1 );
+    TH2D histColBar( "histColBar", "histColBar", 1, 0.0, 1.0, 100, 0.0, 1.0 );
+
+    for( int i = 0; i < 100; ++i ) {
+        histColBar.Fill( 0.5, 0.01 * (double)i+0.005, 0.01 * (double)i+0.001 );
+    }
+
+    TCanvas cvs2D( "cvs2D", "cvs2D", 800, 600 );
     const Int_t NRGBs = 5; const Int_t NCont = 63;
     Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
     Double_t red[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 1.00 };
@@ -373,28 +380,61 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     TColor::CreateGradientColorTable( NRGBs, stops, red, green, blue, NCont );
     gStyle->SetNumberContours( NCont );
 
+    cvs2D.Divide( 1, 2 );
+    cvs2D.cd( 1 );
+    gPad->SetPad( 0.0, 1.0, 0.85, 0.0 );
+    gPad->SetRightMargin( 0.01 );
+    cvs2D.SetGridx( 1 ); cvs2D.SetGridy( 1 );
+
+    cvs2D.cd( 2 );
+    gROOT->GetStyle( "ATLAS" )->SetPadTickX(0);
+    gPad->SetPad( 0.85, 1.0, 1.0, 0.0 );
+    gPad->SetLeftMargin( 0.01 );
+    gPad->SetRightMargin( 0.8 );
+
+    cvs2D.cd( 1 );
     pHist2DDMDir->GetXaxis( )->SetTitle( "#it{#phi}_{DM}" );
     pHist2DDMDir->GetYaxis( )->SetTitle( "#it{#theta}_{DM}" );
     pHist2DDMDir->GetZaxis( )->SetTitle( "A.U." );
     pHist2DDMDir->Draw( "aitoff" );
-    cvs.SaveAs( Form( "%s/%s_dmDir.png", subDir.c_str( ), plotName.c_str( ) ) );
+    cvs2D.cd( 2 );
+    histColBar.GetXaxis( )->SetNdivisions( 0 );
+    histColBar.GetYaxis( )->SetNdivisions( 0 );
+    histColBar.GetZaxis( )->SetNdivisions( 5 );
+    histColBar.GetZaxis( )->SetLabelSize( 0.22 );
+    histColBar.GetZaxis( )->SetLabelOffset( 0.02 );
+    histColBar.GetZaxis( )->SetTitle( "A.U." );
+    histColBar.GetZaxis( )->SetTitleSize( 0.22 );
+    histColBar.GetZaxis( )->SetTitleOffset( 1.2 );
+    histColBar.GetZaxis( )->SetRangeUser( 0.0, 1.0 );
+    histColBar.Draw( "colz" );
+    cvs2D.SaveAs( Form( "%s/%s_dmDir.png", subDir.c_str( ), plotName.c_str( ) ) );
 
+    cvs2D.cd( 1 );
     pHist2DNuDir->GetXaxis( )->SetTitle( "#it{#phi}_{N}" );
     pHist2DNuDir->GetYaxis( )->SetTitle( "#it{#theta}_{N}" );
     pHist2DNuDir->GetZaxis( )->SetTitle( "A.U." );
     pHist2DNuDir->Draw( "aitoff" );
-    // pHist2DNuDir->Draw( "colz" ); // debug
-    cvs.SaveAs( Form( "%s/%s_nuDir.png", subDir.c_str( ), plotName.c_str( ) ) );
+    cvs2D.cd( 2 );
+    histColBar.GetXaxis( )->SetNdivisions( 0 );
+    histColBar.GetYaxis( )->SetNdivisions( 0 );
+    histColBar.GetZaxis( )->SetNdivisions( 5 );
+    histColBar.GetZaxis( )->SetLabelSize( 0.22 );
+    histColBar.GetZaxis( )->SetLabelOffset( 0.02 );
+    histColBar.GetZaxis( )->SetTitle( "A.U." );
+    histColBar.GetZaxis( )->SetTitleSize( 0.22 );
+    histColBar.GetZaxis( )->SetTitleOffset( 1.2 );
+    histColBar.GetZaxis( )->SetRangeUser( 0.0, 1.0 );
+    histColBar.Draw( "colz" );
+    cvs2D.SaveAs( Form( "%s/%s_nuDir.png", subDir.c_str( ), plotName.c_str( ) ) );
 
     // input txt
     double nTotalSI = pHistNuCosGCRateSI_tot->Integral( 1, 40 ) * EXPOSURE;
     double nTotalSD = pHistNuCosGCRateSD_tot->Integral( 1, 40 ) * EXPOSURE;
-
     double nPlusSI = pHistNuCosGCRateSI_tot->Integral( 21, 40 ) * EXPOSURE;
     double nPlusSD = pHistNuCosGCRateSD_tot->Integral( 21, 40 ) * EXPOSURE;
 
     if( atom == 11 ) { // only in case of Ag, threshold is set to be 100 keV
-        //        pHistNuCosGCRateSI_E600keV->
         nTotalSI = pHistNuCosGCRateSI_E600keV->Integral( 1, 40 ) * EXPOSURE;
         nTotalSD = pHistNuCosGCRateSD_E600keV->Integral( 1, 40 ) * EXPOSURE;
         nPlusSI  = pHistNuCosGCRateSI_E600keV->Integral( 21, 40 ) * EXPOSURE;

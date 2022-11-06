@@ -1,8 +1,14 @@
 #include "inc/shinclude.h"
 
-const double EXPOSURE_F  = 0.155 * 0.78  * 1.0 * 31536000.0; // [SF6 density (20 Torr) : kg/m3] * [F fraction in SF6] * volume [m3] * 1 year [sec]
-const double EXPOSURE_p  = 0.1   * 0.016       * 31536000.0; // [NIT density           : kg   ] * [p fraction in NIT]               * 1 year [sec]
-const double EXPOSURE_Ag = 0.1   * 0.44        * 31536000.0; // [NIT density           : kg   ] * [p fraction in NIT]               * 1 year [sec]
+// const double EXPOSURE_F  = 0.155 * 0.78  * 1.0 * 31536000.0; // [SF6 density (20 Torr) : kg/m3] * [F fraction in SF6] * volume [m3] * 1 year [sec]
+// const double EXPOSURE_p  = 0.1   * 0.016       * 31536000.0; // [NIT density           : kg   ] * [p fraction in NIT]               * 1 year [sec]
+// const double EXPOSURE_Ag = 0.1   * 0.44        * 31536000.0; // [NIT density           : kg   ] * [p fraction in NIT]               * 1 year [sec]
+
+// assuming CYGNUS-1000 and 5 kg/year NIT
+const double EXPOSURE_org  = 0.155 * 0.78  * 1.0    * 31536000.0; // [SF6 density (20 Torr) : kg/m3] * [F fraction in SF6] * volume [m3] * 1 year [sec]
+const double EXPOSURE_F    = 0.155 * 0.78  * 1000.0 * 31536000.0; // [SF6 density (20 Torr) : kg/m3] * [F fraction in SF6] * 1000   [m3] * 1 year [sec]
+const double EXPOSURE_p    = 5.0   * 0.016          * 31536000.0; // [NIT density           : kg   ] * [p fraction in NIT]               * 1 year [sec]
+const double EXPOSURE_Ag   = 5.0   * 0.44           * 31536000.0; // [NIT density           : kg   ] * [p fraction in NIT]               * 1 year [sec]
 
 class CRDMParam
 {
@@ -99,23 +105,24 @@ void drawSensitivity( const String& targetDir )
     double FOM_mass_Ag_PIT_err[10] = {};
 
     int massIdx = 0;
-    double scaling = 20.0;
+    // double scaling = 20.0;
+    double scaling = 1.0;
     for( auto pParam : paramArr ) {
         if( pParam == nullptr ) continue;
 
         // calculate statistics including exposure (considering 1 year measurement using C/N-1.0 or NIT)
         double numTot  = 1.0, numPlus = 1.0;
         if( pParam->m_element == "F" ) {
-            numTot = pParam->m_nTotalSD;
-            numPlus = pParam->m_nPlusSD;
+            numTot = pParam->m_nTotalSD * EXPOSURE_F / EXPOSURE_org;
+            numPlus = pParam->m_nPlusSD * EXPOSURE_F / EXPOSURE_org;
         }
         else if( pParam->m_element == "p" ) {
-            numTot = pParam->m_nTotalSI * EXPOSURE_p / EXPOSURE_F;
-            numPlus = pParam->m_nPlusSI * EXPOSURE_p / EXPOSURE_F;
+            numTot = pParam->m_nTotalSI * EXPOSURE_p / EXPOSURE_org;
+            numPlus = pParam->m_nPlusSI * EXPOSURE_p / EXPOSURE_org;
         }
         else if( pParam->m_element == "Ag" ) {
-            numTot = pParam->m_nTotalSI * EXPOSURE_Ag / EXPOSURE_F;
-            numPlus = pParam->m_nPlusSI * EXPOSURE_Ag / EXPOSURE_F;
+            numTot = pParam->m_nTotalSI * EXPOSURE_Ag / EXPOSURE_org;
+            numPlus = pParam->m_nPlusSI * EXPOSURE_Ag / EXPOSURE_org;
         }
         
         // assume 5 year data taking
@@ -303,7 +310,7 @@ void drawSensitivity( const String& targetDir )
 
     TLegend* pLeg = ShTUtil::CreateLegend( 0.2, 0.2, 0.6, 0.45 );
     pLeg->AddEntry( &gFOM_mass_F_NFW, "NFW", "lep" );
-    pLeg->AddEntry( &gFOM_mass_F_PIT, "Pseudo Iso-Thermal", "lep" );
+    pLeg->AddEntry( &gFOM_mass_F_PIT, "PIT", "lep" );
     pLeg->AddEntry( &gFOM_mass_F_EIN, "Einasto", "lep" );
 
     // draw
@@ -318,8 +325,8 @@ void drawSensitivity( const String& targetDir )
     l.SetLineStyle( 2 );
     l.Draw( );
     pLeg->Draw( );
-    ShTUtil::CreateDrawText( 0.2, 0.87, "F, Spin dependent" );
-    ShTUtil::CreateDrawText( 0.2, 0.80, "#sigma_{#chi-p} = 10^{-32} cm");
+    ShTUtil::CreateDrawText( 0.2, 0.87, "F recoil, SD" );
+    ShTUtil::CreateDrawText( 0.2, 0.80, "#sigma_{#chi-p} = 10^{-32} cm^{2}");
     cvsMass->SaveAs(Form("%s/asymm_mass_F.png", targetDir.c_str( )));
     cvsMass->SaveAs(Form("%s/asymm_mass_F.pdf", targetDir.c_str( )));
     cvsMass->SaveAs(Form("%s/asymm_mass_F.eps", targetDir.c_str( )));
@@ -330,8 +337,8 @@ void drawSensitivity( const String& targetDir )
     mg_mass_p.Draw("AP");
     l.Draw( );
     pLeg->Draw( );
-    ShTUtil::CreateDrawText( 0.2, 0.87, "p, Spin independent" );
-    ShTUtil::CreateDrawText( 0.2, 0.80, "#sigma_{#chi-p} = 10^{-32} cm");
+    ShTUtil::CreateDrawText( 0.2, 0.87, "p recoil, SI" );
+    ShTUtil::CreateDrawText( 0.2, 0.80, "#sigma_{#chi-p} = 10^{-32} cm^{2}");
     cvsMass->SaveAs(Form("%s/asymm_mass_p.png", targetDir.c_str( )));
     cvsMass->SaveAs(Form("%s/asymm_mass_p.pdf", targetDir.c_str( )));
     cvsMass->SaveAs(Form("%s/asymm_mass_p.eps", targetDir.c_str( )));
@@ -342,8 +349,8 @@ void drawSensitivity( const String& targetDir )
     mg_mass_Ag.Draw("AP");
     l.Draw( );
     pLeg->Draw( );
-    ShTUtil::CreateDrawText( 0.2, 0.87, "Ag, Spin independent" );
-    ShTUtil::CreateDrawText( 0.2, 0.80, "#sigma_{#chi-p} = 10^{-32} cm");
+    ShTUtil::CreateDrawText( 0.2, 0.87, "Ag recoil, SI" );
+    ShTUtil::CreateDrawText( 0.2, 0.80, "#sigma_{#chi-p} = 10^{-32} cm^{2}");
     cvsMass->SaveAs(Form("%s/asymm_mass_Ag.png", targetDir.c_str( )));
     cvsMass->SaveAs(Form("%s/asymm_mass_Ag.pdf", targetDir.c_str( )));
     cvsMass->SaveAs(Form("%s/asymm_mass_Ag.eps", targetDir.c_str( )));
@@ -448,11 +455,11 @@ void drawSensitivity( const String& targetDir )
     mg_Z_Ag.Add( &gZ_exposure_Ag_EIN_mass1 );
     mg_Z_Ag.Add( &gZ_exposure_Ag_EIN_mass2 );
 
-    TLegend* pLegZ = ShTUtil::CreateLegend( 0.2, 0.55, 0.7, 0.82 );
+    TLegend* pLegZ = ShTUtil::CreateLegend( 0.19, 0.55, 0.65, 0.84 );
     pLegZ->AddEntry( &gZ_exposure_F_NFW_mass1, "NFW   #it{m}_{DM} = 100 keV", "l" );
     pLegZ->AddEntry( &gZ_exposure_F_NFW_mass2, "NFW   #it{m}_{DM} = 1 keV", "l" );
-    pLegZ->AddEntry( &gZ_exposure_F_PIT_mass1, "Pseudo-Isothermal   #it{m}_{DM} = 100 keV", "l" );
-    pLegZ->AddEntry( &gZ_exposure_F_PIT_mass2, "Pseudo-Isothermal   #it{m}_{DM} = 1 keV", "l" );
+    pLegZ->AddEntry( &gZ_exposure_F_PIT_mass1, "PIT   #it{m}_{DM} = 100 keV", "l" );
+    pLegZ->AddEntry( &gZ_exposure_F_PIT_mass2, "PIT   #it{m}_{DM} = 1 keV", "l" );
     pLegZ->AddEntry( &gZ_exposure_F_EIN_mass1, "Einasto   #it{m}_{DM} = 100 keV", "l" );
     pLegZ->AddEntry( &gZ_exposure_F_EIN_mass2, "Einasto   #it{m}_{DM} = 1 keV", "l" );
     
@@ -461,8 +468,8 @@ void drawSensitivity( const String& targetDir )
     mg_Z_F.GetYaxis()->SetRangeUser( 0.0, Z_exposure_F_EIN_mass2[99] * 1.5);
     mg_Z_F.Draw( "AC" );
     pLegZ->Draw( );
-    ShTUtil::CreateDrawText(0.2, 0.87, "F, Spin dependent" );
-    ShTUtil::CreateDrawText(0.7, 0.87, "#sigma_{#chi-p} = 10^{-32} cm");
+    ShTUtil::CreateDrawText(0.2, 0.87, "F recoil, SD" );
+    ShTUtil::CreateDrawText(0.7, 0.87, "#sigma_{#chi-p} = 10^{-32} cm^{2}");
     cvsZ->SaveAs(Form("%s/z_F.png", targetDir.c_str( )));
     cvsZ->SaveAs(Form("%s/z_F.pdf", targetDir.c_str( )));
     cvsZ->SaveAs(Form("%s/z_F.eps", targetDir.c_str( )));
@@ -471,8 +478,8 @@ void drawSensitivity( const String& targetDir )
     mg_Z_p.GetYaxis()->SetRangeUser( 0.0, Z_exposure_p_EIN_mass2[99] * 1.5);
     mg_Z_p.Draw( "AC" );
     pLegZ->Draw( );
-    ShTUtil::CreateDrawText(0.2, 0.87, "p, Spin independent");
-    ShTUtil::CreateDrawText(0.7, 0.87, "#sigma_{#chi-p} = 10^{-32} cm");
+    ShTUtil::CreateDrawText(0.2, 0.87, "p recoil, SI");
+    ShTUtil::CreateDrawText(0.7, 0.87, "#sigma_{#chi-p} = 10^{-32} cm^{2}");
     cvsZ->SaveAs(Form("%s/z_p.png", targetDir.c_str( )));
     cvsZ->SaveAs(Form("%s/z_p.pdf", targetDir.c_str( )));
     cvsZ->SaveAs(Form("%s/z_p.eps", targetDir.c_str( )));
@@ -481,8 +488,8 @@ void drawSensitivity( const String& targetDir )
     mg_Z_Ag.GetYaxis()->SetRangeUser( 0.0, Z_exposure_Ag_EIN_mass2[99] * 1.5);
     mg_Z_Ag.Draw( "AC" );
     pLegZ->Draw( );
-    ShTUtil::CreateDrawText(0.2, 0.87, "Ag, Spin independent");
-    ShTUtil::CreateDrawText(0.7, 0.87, "#sigma_{#chi-p} = 10^{-32} cm");
+    ShTUtil::CreateDrawText(0.2, 0.87, "Ag recoil, SI");
+    ShTUtil::CreateDrawText(0.7, 0.87, "#sigma_{#chi-p} = 10^{-32} cm^{2}");
     cvsZ->SaveAs(Form("%s/z_Ag.png", targetDir.c_str( )));
     cvsZ->SaveAs(Form("%s/z_Ag.pdf", targetDir.c_str( )));
     cvsZ->SaveAs(Form("%s/z_Ag.eps", targetDir.c_str( )));
