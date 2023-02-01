@@ -42,23 +42,22 @@ int main( int argc, char** argv )
     // calculate integral of the dark matter flux
     TF3* pFuncFlux = nullptr;
     TF2* pFuncDir = nullptr;
-    // double rhoScaleKPC = 0.0, rScaleKPC = 0.0;
     double rhoScale = 0.0, rhoScaleKPC = 0.0, rScaleKPC = 0.0;
     if( profile == "NFW" ) {
         pFuncFlux = new TF3( "flux", getDMNFWFluxInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 1e-8, 1e+12, 8, 3 );
-        pFuncDir = new TF2( "fluxDir", getDMNFWFluxDir, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
+        pFuncDir = new TF2( "fluxDir", getDMNFWFluxDirInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
         rhoScale  = DM_RHO_SCALE_NFW;
         rScaleKPC = DM_R_SCALE_NFW;
     }
     else if( profile == "IT" ) {
         pFuncFlux = new TF3( "flux", getDMIsoThermalFluxInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 1e-8, 1e+12, 8, 3 );
-        pFuncDir = new TF2( "fluxDir", getDMIsoThermalFluxDir, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
+        pFuncDir = new TF2( "fluxDir", getDMIsoThermalFluxDirInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
         rhoScale  = DM_RHO_SCALE_PIT;
         rScaleKPC = DM_R_SCALE_PIT;
     }
     else if( profile == "EIN" ) {
         pFuncFlux = new TF3( "flux", getDMEinastoFluxInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 1e-8, 1e+12, 8, 3 );
-        pFuncDir = new TF2( "fluxDir", getDMEinastoFluxDir, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
+        pFuncDir = new TF2( "fluxDir", getDMEinastoFluxDirInt, -0.5*TMath::Pi( ), 0.5*TMath::Pi( ), 0.0, 2.0 * TMath::Pi( ), 4, 2 );
         rhoScale  = DM_RHO_SCALE_EIN;
         rScaleKPC = DM_R_SCALE_EIN;
     }

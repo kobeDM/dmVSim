@@ -205,6 +205,8 @@ double getDMNFWFluxDirInt(  double theta,
                             double sunDist )
 {
     TF1 func( "NFWDirInt", getDMNFWFluxDirLOS, 0.0, los, 5, 1 );
+    int npx = static_cast< int >( 100.0 * los / SUN_DISTANCE );
+    func.SetNpx( npx );
     func.SetParameter( 0, theta    );
     func.SetParameter( 1, phi      );
     func.SetParameter( 2, dmDScale );

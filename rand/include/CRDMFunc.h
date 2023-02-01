@@ -149,6 +149,27 @@ double getDMIsoThermalFluxV   ( double* x,
 
 
 
+double getDMEinastoFluxDir( double theta,
+                            double phi,
+                            double los,
+                            double dmDScale,
+                            double dmRScale,
+                            double sunDist );
+
+double getDMEinastoFluxDir( double* x,
+                            double* par );
+
+double getDMEinastoFluxDirLOS( double* x,
+                               double* par );
+double getDMEinastoFluxDirInt( double theta,
+                               double phi,
+                               double los,
+                               double dmDScale,
+                               double dmRScale,
+                               double sunDist );
+double getDMEinastoFluxDirInt( double* x,
+                               double* par );
+
 double getDMEinastoFlux    ( double theta,
                              double phi,
                              double los,
@@ -166,16 +187,6 @@ double getDMEinastoFluxInt ( double* x,
                              double* par );
 double getDMEinastoFluxV   ( double* x,
                              double* par );
-
-double getDMEinastoFluxDir( double theta,
-                            double phi,
-                            double los,
-                            double dmDScale,
-                            double dmRScale,
-                            double sunDist );
-
-double getDMEinastoFluxDir( double* x,
-                            double* par );
 
 
 void   printProgressBar    ( const int& index, const int& total );
