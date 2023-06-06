@@ -68,14 +68,17 @@ int main( int argc, char** argv )
 
     std::cout << "Select randomizer: " << gRandom->GetName( ) << std::endl;
 
-    if( argc != 4 ) {
+    // if( argc != 4 ) {
+    if( argc != 5 ) {
         std::cerr << "INPUT ERROR" << std::endl;
-        std::cerr << "./SimNuclRecoilRel [target atom: 0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag] [input filename] [output filename]" << std::endl;
+        // std::cerr << "./SimNuclRecoilRel [target atom: 10=F, 11=Ag, 12=p] [input filename] [output filename]" << std::endl;
+        std::cerr << "./SimNuclRecoilRel [target atom: 10=F, 11=Ag, 12=p] [input filename] [output filename] [earth attenuation (def: false)]" << std::endl;
         abort( );
     }
     int    atom   = std::stoi(argv[1]);
     String input  = argv[2];
     String output = argv[3];
+    bool   earthAtt = std::stoi(argv[4]);
     
     double sysRelativeV = 0.0;
     double dmFinVCom  = 0.0;
@@ -140,6 +143,7 @@ int main( int argc, char** argv )
     nuMList[2]=0.932*(0.5069*79.+0.4931*81.);         // Br
     nuMList[3]=0.932*127.;                            // I
     nuMList[11]=0.932*(0.5184*107.+0.48161*109.);     // Ag
+    nuMList[13]=0.932*130.0;                          // Xe (temporary)
 
     //SD
     nuMList[10]=0.932*19.;                            // F
@@ -151,8 +155,9 @@ int main( int argc, char** argv )
     spinFactorList[3] =0.007;                          // I
     spinFactorList[10]=0.647;                          // F
     spinFactorList[12]=0.750;                          // H
+    spinFactorList[13]=0.100;                          // Xe (temporary)
 
-    printf("atom is %d (0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag, 12=p)\n",atom);
+    printf("atom is %d (0=C, 1=S, 2=Br, 3=I, 10=F, 11=Ag, 12=p, 13=Xe)\n",atom);
 
     double nuM = nuMList[ atom ];
     double spinFactor = spinFactorList[ atom ];
@@ -192,94 +197,118 @@ int main( int argc, char** argv )
     pInTree->SetDirectory( &inputFile );
     pOutTree->SetDirectory( &outputFile );
     pOutTree->Branch( "dmM",              &dmM               );
-    pOutTree->Branch( "nuM",              &nuM               );
-    pOutTree->Branch( "muN",              &muN               );
-    pOutTree->Branch( "mup",              &mup               );
-    pOutTree->Branch( "massNumber",       &massNumber        );
+    // pOutTree->Branch( "nuM",              &nuM               );
+    // pOutTree->Branch( "muN",              &muN               );
+    // pOutTree->Branch( "mup",              &mup               );
+    // pOutTree->Branch( "massNumber",       &massNumber        );
     pOutTree->Branch( "xsection",         &xsection          );
     pOutTree->Branch( "totalRateSI",      &totalRateSI       ); // 1/kg/day
     pOutTree->Branch( "totalRateSD",      &totalRateSD       ); // 1/kg/day
 
     pOutTree->Branch( "atom",             &atom              );
-    pOutTree->Branch( "dmInjV_debug",     &velocity          );
+    // pOutTree->Branch( "dmInjV_debug",     &velocity          );
     pOutTree->Branch( "dmInjV",           &dmInitVExp        );
-    pOutTree->Branch( "dmInjVX",          &dmInitVExpX       );
-    pOutTree->Branch( "dmInjVY",          &dmInitVExpY       );
-    pOutTree->Branch( "dmInjVZ",          &dmInitVExpZ       );
+    // pOutTree->Branch( "dmInjVX",          &dmInitVExpX       );
+    // pOutTree->Branch( "dmInjVY",          &dmInitVExpY       );
+    // pOutTree->Branch( "dmInjVZ",          &dmInitVExpZ       );
     pOutTree->Branch( "dmInjTheta",       &theta             );
     pOutTree->Branch( "dmInjPhi",         &phi               );
 
-    pOutTree->Branch( "dmInGamma",        &dmGamma           );
-    pOutTree->Branch( "dmInMomTmpExp",    &dmMomTmpExp       );
-    pOutTree->Branch( "dmInETmpExp",      &dmETmpExp         );
+    // pOutTree->Branch( "dmInGamma",        &dmGamma           );
+    // pOutTree->Branch( "dmInMomTmpExp",    &dmMomTmpExp       );
+    // pOutTree->Branch( "dmInETmpExp",      &dmETmpExp         );
 
-    pOutTree->Branch( "dmOutPhiTmpExp",   &dmScatPhiTmpExp   );
-    pOutTree->Branch( "dmOutThetaTmpExp", &dmScatThetaTmpExp );
-    pOutTree->Branch( "dmOutCosPhiTmpExp",   &dmCosScatPhiTmpExp   );
-    pOutTree->Branch( "dmOutCosThetaTmpExp", &dmCosScatThetaTmpExp );
+    // pOutTree->Branch( "dmOutPhiTmpExp",   &dmScatPhiTmpExp   );
+    // pOutTree->Branch( "dmOutThetaTmpExp", &dmScatThetaTmpExp );
+    // pOutTree->Branch( "dmOutCosPhiTmpExp",   &dmCosScatPhiTmpExp   );
+    // pOutTree->Branch( "dmOutCosThetaTmpExp", &dmCosScatThetaTmpExp );
 
-    pOutTree->Branch( "nuRecPhiTmpExp",   &nuScatPhiTmpExp   );
-    pOutTree->Branch( "nuRecThetaTmpExp", &nuScatThetaTmpExp );
-    pOutTree->Branch( "nuRecCosPhiTmpExp",   &nuCosScatPhiTmpExp   );
-    pOutTree->Branch( "nuRecCosThetaTmpExp", &nuCosScatThetaTmpExp );
-    pOutTree->Branch( "nuRecVTmpExpX",    &nuFinVTmpExpX  );
-    pOutTree->Branch( "nuRecVTmpExpY",    &nuFinVTmpExpY  );
-    pOutTree->Branch( "nuRecVTmpExpZ",    &nuFinVTmpExpZ  );
-    pOutTree->Branch( "nuRecETmpExp",     &nuFinETmpExp   );
-    pOutTree->Branch( "nuRecMomTmpExp",   &nuFinMomTmpExp   );
+    // pOutTree->Branch( "nuRecPhiTmpExp",   &nuScatPhiTmpExp   );
+    // pOutTree->Branch( "nuRecThetaTmpExp", &nuScatThetaTmpExp );
+    // pOutTree->Branch( "nuRecCosPhiTmpExp",   &nuCosScatPhiTmpExp   );
+    // pOutTree->Branch( "nuRecCosThetaTmpExp", &nuCosScatThetaTmpExp );
+    // pOutTree->Branch( "nuRecVTmpExpX",    &nuFinVTmpExpX  );
+    // pOutTree->Branch( "nuRecVTmpExpY",    &nuFinVTmpExpY  );
+    // pOutTree->Branch( "nuRecVTmpExpZ",    &nuFinVTmpExpZ  );
+    // pOutTree->Branch( "nuRecETmpExp",     &nuFinETmpExp   );
+    // pOutTree->Branch( "nuRecMomTmpExp",   &nuFinMomTmpExp   );
 
-    pOutTree->Branch( "dmOutV",           &dmFinVExp         );
-    pOutTree->Branch( "dmOutVX",          &dmFinVExpX        );
-    pOutTree->Branch( "dmOutVY",          &dmFinVExpY        );
-    pOutTree->Branch( "dmOutVZ",          &dmFinVExpZ        );
-    pOutTree->Branch( "dmOutTheta",       &dmScatThetaExp    );
-    pOutTree->Branch( "dmOutPhi",         &dmScatPhiExp      );
-    pOutTree->Branch( "dmOutCosTheta",    &dmCosScatThetaExp );
-    pOutTree->Branch( "dmOutSinPhi",      &dmSinScatPhiExp   );
+    // pOutTree->Branch( "dmOutV",           &dmFinVExp         );
+    // pOutTree->Branch( "dmOutVX",          &dmFinVExpX        );
+    // pOutTree->Branch( "dmOutVY",          &dmFinVExpY        );
+    // pOutTree->Branch( "dmOutVZ",          &dmFinVExpZ        );
+    // pOutTree->Branch( "dmOutTheta",       &dmScatThetaExp    );
+    // pOutTree->Branch( "dmOutPhi",         &dmScatPhiExp      );
+    // pOutTree->Branch( "dmOutCosTheta",    &dmCosScatThetaExp );
+    // pOutTree->Branch( "dmOutSinPhi",      &dmSinScatPhiExp   );
                                         
     pOutTree->Branch( "nuRecTheta",       &nuScatThetaExp    );
     pOutTree->Branch( "nuRecPhi",         &nuScatPhiExp      );
-    pOutTree->Branch( "nuRecSinTheta",    &nuSinScatThetaExp );
+    // pOutTree->Branch( "nuRecSinTheta",    &nuSinScatThetaExp );
     pOutTree->Branch( "nuRecCosTheta",    &nuCosScatThetaExp );
-    pOutTree->Branch( "nuRecSinPhi",      &nuSinScatPhiExp   );
-    pOutTree->Branch( "nuRecCosPhi",      &nuCosScatPhiExp   );
-    pOutTree->Branch( "nuRecV",           &nuFinVExp         );
-    pOutTree->Branch( "nuRecVX",          &nuFinVExpX        );
-    pOutTree->Branch( "nuRecVY",          &nuFinVExpY        );
-    pOutTree->Branch( "nuRecVZ",          &nuFinVExpZ        );
+    // pOutTree->Branch( "nuRecSinPhi",      &nuSinScatPhiExp   );
+    // pOutTree->Branch( "nuRecCosPhi",      &nuCosScatPhiExp   );
+    // pOutTree->Branch( "nuRecV",           &nuFinVExp         );
+    // pOutTree->Branch( "nuRecVX",          &nuFinVExpX        );
+    // pOutTree->Branch( "nuRecVY",          &nuFinVExpY        );
+    // pOutTree->Branch( "nuRecVZ",          &nuFinVExpZ        );
     pOutTree->Branch( "nuRecE",           &nuRecoilE         );
 
-    pOutTree->Branch( "nuRecCosGamma",    &nuCosScatGammaExp );
-    pOutTree->Branch( "nuRecGamma",       &nuScatGammaExp    );
+    // pOutTree->Branch( "nuRecCosGamma",    &nuCosScatGammaExp );
+    // pOutTree->Branch( "nuRecGamma",       &nuScatGammaExp    );
                                         
-    pOutTree->Branch( "sysRelV",          &sysRelativeV      );
+    // pOutTree->Branch( "sysRelV",          &sysRelativeV      );
 
-    pOutTree->Branch( "scatThetaCom",     &scatThetaCom      );
-    pOutTree->Branch( "cosScatThetaCom",  &cosScatThetaCom   );
-    pOutTree->Branch( "dmMomCom",         &dmMomCom          );
+    // pOutTree->Branch( "scatThetaCom",     &scatThetaCom      );
+    // pOutTree->Branch( "cosScatThetaCom",  &cosScatThetaCom   );
+    // pOutTree->Branch( "dmMomCom",         &dmMomCom          );
                                                               
-    pOutTree->Branch( "beta",             &beta              );
-    pOutTree->Branch( "gamma",            &gamma             );
+    // pOutTree->Branch( "beta",             &beta              );
+    // pOutTree->Branch( "gamma",            &gamma             );
     pOutTree->Branch( "formFactorSq",     &formFactorSq      );
 
     pOutTree->Branch( "rndm",             &rndm              );
 
-    pOutTree->Branch( "mandelS",          &mandelS           );
-    pOutTree->Branch( "mandelT",          &mandelT           );
-    pOutTree->Branch( "mandelU",          &mandelU           );
+    // pOutTree->Branch( "mandelS",          &mandelS           );
+    // pOutTree->Branch( "mandelT",          &mandelT           );
+    // pOutTree->Branch( "mandelU",          &mandelU           );
     pOutTree->Branch( "invWeight",        &invWeight         );
 
     // debug
-    pOutTree->Branch( "dmInjRotV",        &dmInjRotV        );
-    pOutTree->Branch( "dmInjRotVX",       &dmInjRotVX       );
-    pOutTree->Branch( "dmInjRotVY",       &dmInjRotVY       );
-    pOutTree->Branch( "dmInjRotVZ",       &dmInjRotVZ       );
+    // pOutTree->Branch( "dmInjRotV",        &dmInjRotV        );
+    // pOutTree->Branch( "dmInjRotVX",       &dmInjRotVX       );
+    // pOutTree->Branch( "dmInjRotVY",       &dmInjRotVY       );
+    // pOutTree->Branch( "dmInjRotVZ",       &dmInjRotVZ       );
 
-
+    std::cout << "each attenuation: " << earthAtt << std::endl;
+    
     int totEvt = pInTree->GetEntries( );
     for( int evt = 0; evt < totEvt; ++evt ) {
         printProgressBar( evt, totEvt );
         pInTree->GetEntry( evt );
+
+        if( earthAtt == true ) {
+            // DM velocity correction
+            double gamma = 1.0 / sqrt(1.0 - velocity*velocity / V_LIGHT/V_LIGHT );
+            double energy = dmM * (gamma - 1.0);
+
+            // mantle1 (2900 km)
+            for( int i = 0; i < 2900; i++ ) {
+                energy = energy + attenuate( dmM, energy, 100000.0, xsection, false );
+            }
+    
+            // core (6940 km)
+            for( int i = 0; i < 6940; i++ ) {
+                energy = energy + attenuate( dmM, energy, 100000.0, xsection, true );
+            }
+
+            // mantle2 (2900 km)
+            for( int i = 0; i < 2900; i++ ) {
+                energy = energy + attenuate( dmM, energy, 100000.0, xsection, false );
+            }
+
+            velocity = V_LIGHT * sqrt(energy*energy + 2.0*energy*dmM) / (energy + dmM);
+        }
 
         dmInitVExpVec = getDmVVec( velocity, theta, phi );
         dmInitVExpX   = dmInitVExpVec.X( );
@@ -443,11 +472,12 @@ double getNuFinVExp( const double& dmInitVExp,
     return sqrt( dmM / nuM * ( sq( dmInitVExp ) - sq( dmFinVExp ) ) );
 }
 
-// recoil energy [keV]
+// recoil energy [GeV]
 double getRecoilEnergy( const double& nuM,
                         const double& nuVExp )
 {
-    return pow( 10.0, 6.0 ) * nuM * sq( nuVExp/V_LIGHT ) * 0.5;
+    // return pow( 10.0, 6.0 ) * nuM * sq( nuVExp/V_LIGHT ) * 0.5;
+    return nuM * sq( nuVExp/V_LIGHT ) * 0.5;
 }
 
 // double getRotAngleAlpha( TVector3 dmInitVExpVec ){

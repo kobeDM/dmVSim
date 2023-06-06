@@ -42,7 +42,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     double formFactorSq = 0.0;
     double rndm = 0.0;
 
-    double invWeight = 0.0, totalRateSI = 0.0, totalRateSD = 0.0;
+    double totalRateSI = 0.0, totalRateSD = 0.0;
 
     int atom = 0;
 
@@ -60,7 +60,6 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     pTree->SetBranchAddress( "formFactorSq",  &formFactorSq );
     pTree->SetBranchAddress( "rndm",          &rndm );
 
-    pTree->SetBranchAddress( "invWeight",     &invWeight );
     pTree->SetBranchAddress( "totalRateSI",   &totalRateSI );
     pTree->SetBranchAddress( "totalRateSD",   &totalRateSD );
 
@@ -113,8 +112,8 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
 
         double dmCosGC = cos( dmInjTheta ) *cos( dmPhiCorr );
         pHist2DDMCosGCV->Fill( dmCosGC, dmInjV / ( TMath::C( ) * 0.001 ) );
-        
-        if( rndm <= formFactorSq ) {
+
+        // if( rndm <= formFactorSq ) {
             if( nuRecCosTheta < 0.001 ) nuRecCosTheta = 0.001;
             pHist2DNuDir->Fill( nuPhiCorr * 180.0 / TMath::Pi( ), nuRecTheta * 180.0 / TMath::Pi( ), 1.0 / nuRecCosTheta ); // debug
 
@@ -122,48 +121,48 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
 
             if     ( nuRecE > 1.0     ) {  // > 1 GeV
                 pHistNuCosGC_EMore->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_EMore->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION ); 
-                pHistNuCosGCRateSD_EMore->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSI_EMore->Fill( nuRecCosGC, totalRateSI / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSD_EMore->Fill( nuRecCosGC, totalRateSD / (double)totEvt * CORRECTION ); 
             }
             else if( nuRecE > 0.1     ) { // 100 MeV < m < 1 GeV
                 pHistNuCosGC_E1GeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E1GeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION ); 
-                pHistNuCosGCRateSD_E1GeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSI_E1GeV->Fill( nuRecCosGC, totalRateSI / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSD_E1GeV->Fill( nuRecCosGC, totalRateSD / (double)totEvt * CORRECTION ); 
             }
             else if( nuRecE > 0.01    ) { // 10 MeV < m < 100 MeV
                 pHistNuCosGC_E100MeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E100MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
-                pHistNuCosGCRateSD_E100MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSI_E100MeV->Fill( nuRecCosGC, totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E100MeV->Fill( nuRecCosGC, totalRateSD / (double)totEvt * CORRECTION );
             }
             else if( nuRecE > 0.001   ) { // 1 MeV < m < 10 MeV
                 pHistNuCosGC_E10MeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E10MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION ); 
-                pHistNuCosGCRateSD_E10MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSI_E10MeV->Fill( nuRecCosGC, totalRateSI / (double)totEvt * CORRECTION ); 
+                pHistNuCosGCRateSD_E10MeV->Fill( nuRecCosGC, totalRateSD / (double)totEvt * CORRECTION ); 
             }
             else if( nuRecE > 0.0001  ) { // 100 keV < m < 1 MeV
                 pHistNuCosGC_E1MeV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E1MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
-                pHistNuCosGCRateSD_E1MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSI_E1MeV->Fill( nuRecCosGC, totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E1MeV->Fill( nuRecCosGC, totalRateSD / (double)totEvt * CORRECTION );
             }
             else if( nuRecE > 0.00001 ) { // 10 keV < m < 100 keV
                 pHistNuCosGC_E100keV->Fill( nuRecCosGC );
-                pHistNuCosGCRateSI_E100keV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
-                pHistNuCosGCRateSD_E100keV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSI_E100keV->Fill( nuRecCosGC, totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E100keV->Fill( nuRecCosGC, totalRateSD / (double)totEvt * CORRECTION );
             }
 
             if( nuRecE > 0.0001 && nuRecE < 0.0006 ) {
-                pHistNuCosGCRateSI_E600keV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
-                pHistNuCosGCRateSD_E600keV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSI_E600keV->Fill( nuRecCosGC, totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E600keV->Fill( nuRecCosGC, totalRateSD / (double)totEvt * CORRECTION );
             }
             if( nuRecE > 0.001 && nuRecE < 0.003 ) {
-                pHistNuCosGCRateSI_E3MeV->Fill( nuRecCosGC, invWeight * totalRateSI / (double)totEvt * CORRECTION );
-                pHistNuCosGCRateSD_E3MeV->Fill( nuRecCosGC, invWeight * totalRateSD / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSI_E3MeV->Fill( nuRecCosGC, totalRateSI / (double)totEvt * CORRECTION );
+                pHistNuCosGCRateSD_E3MeV->Fill( nuRecCosGC, totalRateSD / (double)totEvt * CORRECTION );
             }
 
-            if( nuRecE < 0.0006 ) pHistNuE_600keV->Fill  ( nuRecE * 1000000.0, invWeight * totalRateSI / (double)totEvt * CORRECTION );
-            if( nuRecE < 0.003  ) pHistNuE_3000keV->Fill ( nuRecE * 1000000.0, invWeight * totalRateSI / (double)totEvt * CORRECTION );
-            if( nuRecE < 0.01   ) pHistNuE_10000keV->Fill( nuRecE * 1000000.0, invWeight * totalRateSI / (double)totEvt * CORRECTION );
-        }
+            if( nuRecE < 0.0006 ) pHistNuE_600keV->Fill  ( nuRecE * 1000000.0, totalRateSI / (double)totEvt * CORRECTION );
+            if( nuRecE < 0.003  ) pHistNuE_3000keV->Fill ( nuRecE * 1000000.0, totalRateSI / (double)totEvt * CORRECTION );
+            if( nuRecE < 0.01   ) pHistNuE_10000keV->Fill( nuRecE * 1000000.0, totalRateSI / (double)totEvt * CORRECTION );
+        // }
     }
 
     String atomStr = "";
@@ -216,6 +215,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     pLeg->Draw( );
 
     cvs.SaveAs( Form( "%s/%s_cosGC.png", subDir.c_str( ), plotName.c_str( ) ) );
+    cvs.SaveAs( Form( "%s/%s_cosGC.pdf", subDir.c_str( ), plotName.c_str( ) ) );
 
     TH1D* pHistNuCosGCRateSI_tot = new TH1D( "histNuCosGCRateSI_tot",  "histNuCosGCRateSI_tot",  40, -1.0, 1.0 );
     TH1D* pHistNuCosGCRateSD_tot = new TH1D( "histNuCosGCRateSD_tot",  "histNuCosGCRateSD_tot",  40, -1.0, 1.0 );
@@ -315,6 +315,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     ShTUtil::CreateDrawText( 0.225, 0.48, Form("%s recoil, SI", atomStr.c_str( ) ), 0.045 );
 
     cvs.SaveAs( Form( "%s/%s_cosGCSI.png", subDir.c_str( ), plotName.c_str( ) ) );
+    cvs.SaveAs( Form( "%s/%s_cosGCSI.pdf", subDir.c_str( ), plotName.c_str( ) ) );
 
     max_histNuCosGC = pHistNuCosGCRateSD_tot->GetMaximum( );
     pHistNuCosGCRateSD_tot->GetYaxis( )->SetRangeUser( 0.0, max_histNuCosGC * 1.5 );
@@ -345,6 +346,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     ShTUtil::CreateDrawText( 0.225, 0.48, Form("%s recoil, SD", atomStr.c_str( ) ), 0.045 );
 
     cvs.SaveAs( Form( "%s/%s_cosGCSD.png", subDir.c_str( ), plotName.c_str( ) ) );
+    cvs.SaveAs( Form( "%s/%s_cosGCSD.pdf", subDir.c_str( ), plotName.c_str( ) ) );
 
     if( atom == 10 ) {
         pHistNuE_3000keV->GetXaxis()->SetTitle( "Recoil energy [keV]" );
@@ -363,6 +365,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     }
 
     cvs.SaveAs( Form( "%s/%s_nuE.png", subDir.c_str( ), plotName.c_str( ) ) );
+    cvs.SaveAs( Form( "%s/%s_nuE.pdf", subDir.c_str( ), plotName.c_str( ) ) );
 
     // 2D plots
     TH2D histColBar( "histColBar", "histColBar", 1, 0.0, 1.0, 100, 0.0, 1.0 );
@@ -396,6 +399,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     pHist2DDMDir->GetXaxis( )->SetTitle( "#it{#phi}_{DM}" );
     pHist2DDMDir->GetYaxis( )->SetTitle( "#it{#theta}_{DM}" );
     pHist2DDMDir->GetZaxis( )->SetTitle( "A.U." );
+    pHist2DDMDir->GetZaxis( )->SetRangeUser( 0.0, pHist2DDMDir->GetMaximum() ); 
     pHist2DDMDir->Draw( "aitoff" );
     cvs2D.cd( 2 );
     histColBar.GetXaxis( )->SetNdivisions( 0 );
@@ -409,11 +413,13 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     histColBar.GetZaxis( )->SetRangeUser( 0.0, 1.0 );
     histColBar.Draw( "colz" );
     cvs2D.SaveAs( Form( "%s/%s_dmDir.png", subDir.c_str( ), plotName.c_str( ) ) );
+    cvs2D.SaveAs( Form( "%s/%s_dmDir.pdf", subDir.c_str( ), plotName.c_str( ) ) );
 
     cvs2D.cd( 1 );
     pHist2DNuDir->GetXaxis( )->SetTitle( "#it{#phi}_{N}" );
     pHist2DNuDir->GetYaxis( )->SetTitle( "#it{#theta}_{N}" );
     pHist2DNuDir->GetZaxis( )->SetTitle( "A.U." );
+    pHist2DNuDir->GetZaxis( )->SetRangeUser( 0.0, pHist2DNuDir->GetMaximum() ); 
     pHist2DNuDir->Draw( "aitoff" );
     cvs2D.cd( 2 );
     histColBar.GetXaxis( )->SetNdivisions( 0 );
@@ -427,6 +433,7 @@ void drawPlots( const String& inputFile, const String& outputDir, const String& 
     histColBar.GetZaxis( )->SetRangeUser( 0.0, 1.0 );
     histColBar.Draw( "colz" );
     cvs2D.SaveAs( Form( "%s/%s_nuDir.png", subDir.c_str( ), plotName.c_str( ) ) );
+    cvs2D.SaveAs( Form( "%s/%s_nuDir.pdf", subDir.c_str( ), plotName.c_str( ) ) );
 
     // input txt
     double nTotalSI = pHistNuCosGCRateSI_tot->Integral( 1, 40 ) * EXPOSURE;

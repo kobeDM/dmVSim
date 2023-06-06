@@ -149,6 +149,27 @@ double getDMIsoThermalFluxV   ( double* x,
 
 
 
+double getDMEinastoFluxDir( double theta,
+                            double phi,
+                            double los,
+                            double dmDScale,
+                            double dmRScale,
+                            double sunDist );
+
+double getDMEinastoFluxDir( double* x,
+                            double* par );
+
+double getDMEinastoFluxDirLOS( double* x,
+                               double* par );
+double getDMEinastoFluxDirInt( double theta,
+                               double phi,
+                               double los,
+                               double dmDScale,
+                               double dmRScale,
+                               double sunDist );
+double getDMEinastoFluxDirInt( double* x,
+                               double* par );
+
 double getDMEinastoFlux    ( double theta,
                              double phi,
                              double los,
@@ -167,21 +188,28 @@ double getDMEinastoFluxInt ( double* x,
 double getDMEinastoFluxV   ( double* x,
                              double* par );
 
-double getDMEinastoFluxDir( double theta,
-                            double phi,
-                            double los,
-                            double dmDScale,
-                            double dmRScale,
-                            double sunDist );
-
-double getDMEinastoFluxDir( double* x,
-                            double* par );
-
 
 void   printProgressBar    ( const int& index, const int& total );
 
 double getVelocity         ( double* xCDF,
                              double* yCDF,
                              const double& rndUni );
+
+bool   corrEarthAttenuation( const double& dmM,
+                             const double& dmV,
+                             const double& xsection,
+                             double& dmVcorr );
+double attenuate           ( const double& dmM,
+                             const double& dmT,
+                             const double& length, // [cm]
+                             const double& xsection, // [cm2]
+                             const bool&   isCore );
+
+double getTMaxAtt( const double& dmM, const double& nuM, const double& dmT );
+
+double getXSecCorrAtt( const double& dmM, const double& nuM, const double& atomNumber );
+
+double getFormFactor( const double& dmM, const double& dmT, const double& cutoffScale );
+
 
 #endif // CRDM_FUNC_H

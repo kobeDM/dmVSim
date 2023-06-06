@@ -205,6 +205,8 @@ double getDMNFWFluxDirInt(  double theta,
                             double sunDist )
 {
     TF1 func( "NFWDirInt", getDMNFWFluxDirLOS, 0.0, los, 5, 1 );
+    int npx = static_cast< int >( 100.0 * los / SUN_DISTANCE );
+    func.SetNpx( npx );
     func.SetParameter( 0, theta    );
     func.SetParameter( 1, phi      );
     func.SetParameter( 2, dmDScale );
@@ -687,4 +689,70 @@ double getVelocity( double* xCDF, double* yCDF, const double& rndUni )
     }
     
     return retVal;
+}
+
+bool corrEarthAttenuation( const double& dmM, const double& dmV, const double& xsection, double& dmVcorr )
+{
+    // calculate kinetic energy
+    double dmGamma = 1.0 / sqrt(1.0 - dmV*dmV / V_LIGHT / V_LIGHT );
+    double dmMom   = dmGamma * dmM * dmV / V_LIGHT;
+    double dmE     = sqrt( dmMom * dmMom + dmM * dmM );
+    double dmT     = dmE - dmM;
+
+    // mantle1 (2900 km)
+    for( int i = 0; i < 2900; i++ ) {
+        dmT = attenuate( dmM, dmT, 100000.0, xsection, false );
+    }
+    
+    // core (6940 km)
+    for( int i = 0; i < 6940; i++ ) {
+        dmT = attenuate( dmM, dmT, 100000.0, xsection, true );
+    }
+
+    // mantle2 (2900 km)
+    for( int i = 0; i < 2900; i++ ) {
+        dmT = attenuate( dmM, dmT, 100000.0, xsection, false );
+    }
+
+    double dmECorr = dmT + dmM;
+    double dmMomCorr = sqrt( dmECorr*dmECorr - dmM*dmM );
+    dmVcorr = sqrt( dmMomCorr*dmMomCorr / ( dmMomCorr*dmMomCorr + dmM*dmM ) ) * V_LIGHT;
+
+    return true;
+}
+
+double attenuate( const double& dmM,
+                  const double& dmT,
+                  const double& length, // [cm]
+                  const double& xsection, // [cm2]
+                  const bool&   isCore )
+{
+    double atomNumber = isCore == true ? 54.0 : 24.0;// PRL 126, 091804 (2021)
+    double nuM = PROTON_MASS * atomNumber;
+    
+    double dmTMaxAtt = getTMaxAtt( dmM, nuM, dmT );
+    double xsecCorr = getXSecCorrAtt( dmM, nuM, atomNumber ); // xsection is not applied at this moment
+    double densityCorr = isCore == true ? 1.22e+23 : 1.24e+23; // /cm3
+    double formFactor = getFormFactor( dmM, dmT, 0.2 );
+    // double formFactor = 1.0;
+
+    return -1.0 / (2.0*dmM) * xsection * densityCorr * xsecCorr * formFactor * formFactor * dmTMaxAtt * length;
+}
+
+double getTMaxAtt( const double& dmM, const double& nuM, const double& dmT )
+{
+    return 2.0*nuM*dmM * ( dmT*dmT + 2.0*dmM*dmT ) / (nuM + dmM) / (nuM + dmM);
+}
+
+double getXSecCorrAtt( const double& dmM, const double& nuM, const double& atomNumber )
+{
+    double den = PROTON_MASS * ( dmM + nuM );
+    double num = nuM * ( dmM + PROTON_MASS );
+    return pow( atomNumber * num / den, 2.0 );
+}
+
+double getFormFactor( const double& dmM, const double& dmT, const double& cutoffScale )
+{
+    double q2 = 2.0*dmM*dmT;
+    return 1.0 / (1.0 + q2*q2/cutoffScale/cutoffScale)/(1.0 + q2*q2/cutoffScale/cutoffScale);
 }
