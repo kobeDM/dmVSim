@@ -195,4 +195,21 @@ double getVelocity         ( double* xCDF,
                              double* yCDF,
                              const double& rndUni );
 
+bool   corrEarthAttenuation( const double& dmM,
+                             const double& dmV,
+                             const double& xsection,
+                             double& dmVcorr );
+double attenuate           ( const double& dmM,
+                             const double& dmT,
+                             const double& length, // [cm]
+                             const double& xsection, // [cm2]
+                             const bool&   isCore );
+
+double getTMaxAtt( const double& dmM, const double& nuM, const double& dmT );
+
+double getXSecCorrAtt( const double& dmM, const double& nuM, const double& atomNumber );
+
+double getFormFactor( const double& dmM, const double& dmT, const double& cutoffScale );
+
+
 #endif // CRDM_FUNC_H

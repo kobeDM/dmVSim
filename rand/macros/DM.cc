@@ -1,17 +1,9 @@
-//20120524 nakamura debug
-//20110820 nakamura Copy from CoGeNT
-//20191011 ikeda debug for ROOT
 #include "func.h"
 
 const double M_D=100; // [GeV]
 
 void DM( )
 {
-
-
-  //#include <fstream.h>
-  //#include "/home/miuchi/root_macro/cpalette.cc"
-  //cpalette();
 
   gROOT->Reset();
   gStyle->SetOptStat(0);
@@ -75,192 +67,6 @@ void DM( )
   spec_nor_Jun->Draw("same");
   spec_nor_Dec->Draw("same");
   legend1->Draw("same");
-  // c1->Print("energy_spectrum_kikakuka.eps");
-
-
-  //**********************************************************************
-  //** Form Factor *******************************************************
-  //**********************************************************************
-
-
-
-  /**********************************************************************/
-  /** Nuclear rms charge radii ******************************************/
-  /**********************************************************************/
-  /*
-	TCanvas *c3;
-  c3 = new TCanvas("c3", "c3", 75, 75, 1000, 650);
-  c3->SetFillColor(10);
-  c3->SetGridx(1);
-  c3->SetGridy(1);
-  c3->SetLogx(0);
-  c3->SetLogy(0);
-
-  TF1 *radii1 = new TF1("radii1","sqrt(3.0/5.0*pow((1.23*x**(1.0/3.0)-0.6),2)+7.0/5.0*[1]*[1]*[0]*[0])",0,250);
-  radii1->SetLineColor(2);
-  double a_3 = 0.52;
-  radii1->SetParameters(a_3,PI);
-
-  TF1 *radii2 = new TF1("radii2","sqrt(3.0/5.0*[0]*[0]*x**(2.0/3.0)+3.0*[1]*[1])",0,250);
-  radii2->SetLineColor(4);
-  double r_n_3 = 1.0;//1.19; <- to match the shape of graph
-  double s_3 = 1.0;//0.3; <- to match the shape of graph
-  radii2->SetParameters(r_n_3,s_3);
-
-  TF1 *radii3 = new TF1("radii3","0.89*x**(1.0/3.0)+0.3",0,250);
-  radii3->SetLineColor(3);
-
-  TH1F *waku3 = new TH1F("waku3","Nuclear rms charge radii",1,0,250);
-  waku3->SetMinimum(0);
-  waku3->SetMaximum(6);
-  waku3->GetXaxis()->SetTitle("A [atomic number]");
-  waku3->GetYaxis()->SetTitle("r_{rms}");
-
-  TLegend *legend3 = new TLegend(0.6,0.3,0.88,0.39);
-  legend3->AddEntry(radii1,"least-squares fit to c","l");
-  legend3->AddEntry(radii2,"Engal [15] fit","l");
-  legend3->AddEntry(radii3,"Eder [23] fit","l");
-
-  waku3->Draw("");
-  radii1->Draw("same");
-  radii2->Draw("same");
-  radii3->Draw("same");
-  legend3->Draw("same");
-	*/
-
-
-
-
-
-  //**********************************************************************
-  //** Cross Section  ****************************************************
-  //**********************************************************************
-  /*
-	TCanvas *c4;
-  c4 = new TCanvas("c4", "c4", 100, 100, 850, 450);
-  c4->SetFillColor(10);
-
-  TPad *pad41 = new TPad("pad41","pad41",0.0,0.0,0.5,1.0);
-  pad41->SetFillColor(10);
-  pad41->SetGridx(1);
-  pad41->SetGridy(1);
-  pad41->SetLogx(1);
-  pad41->SetLogy(1);
-  pad41->SetLeftMargin(0.15);
-  pad41->SetRightMargin(0.05);
-  pad41->SetBottomMargin(0.11);
-  pad41->Draw();
-
-  TPad *pad42 = new TPad("pad42","pad42",0.5,0.0,1.0,1.0);
-  pad42->SetFillColor(10);
-  pad42->SetGridx(1);
-  pad42->SetGridy(1);
-  pad42->SetLogx(1);
-  pad42->SetLogy(1);
-  pad42->SetLeftMargin(0.15);
-  pad42->SetRightMargin(0.05);
-  pad42->SetBottomMargin(0.11);
-  pad42->Draw();
-
-  // SI cross section
-  TF1 *cross_SI = new TF1("cross_SI","func_cross_SI(x,[0])",10,1000);
-
-  // SD cross section
-  TF1 *cross_SD = new TF1("cross_SD","func_cross_SD(x,[0],[1])",10,1000);
-
-  // material
-  TF1* cross_SI_Ge = (TF1*)cross_SI->Clone("cross_SI_Ge");
-  TF1* cross_SI_Xe = (TF1*)cross_SI->Clone("cross_SI_Xe");
-  cross_SI->SetParameter(0,A);
-  cross_SI_Ge->SetParameter(0,73);
-  cross_SI_Xe->SetParameter(0,128);
-
-  TF1* cross_SD_Ge = (TF1*)cross_SD->Clone("cross_SD_Ge");
-  TF1* cross_SD_Xe = (TF1*)cross_SD->Clone("cross_SD_Xe");
-  TF1* cross_SD_Xe2= (TF1*)cross_SD->Clone("cross_SD_Xe2");
-  TF1* cross_SD_Li = (TF1*)cross_SD->Clone("cross_SD_Li");
-  TF1* cross_SD_Na = (TF1*)cross_SD->Clone("cross_SD_Na");
-  TF1* cross_SD_I  = (TF1*)cross_SD->Clone("cross_SD_I");
-  TF1* cross_SD_Si = (TF1*)cross_SD->Clone("cross_SD_Si");
-  TF1* cross_SD_W  = (TF1*)cross_SD->Clone("cross_SD_W");
-  cross_SD->SetParameters(A, Ja);
-  cross_SD_Ge->SetParameters(73, Ja_Ge);
-  cross_SD_Xe->SetParameters(129,Ja_Xe);
-  cross_SD_Xe2->SetParameters(131,Ja_Xe2);
-  cross_SD_Li->SetParameters(7,  Ja_Li);
-  cross_SD_Na->SetParameters(23, Ja_Na);
-  cross_SD_I->SetParameters(127, Ja_I);
-  cross_SD_Si->SetParameters(29, Ja_Si);
-  cross_SD_W->SetParameters(183, Ja_W);
-
-  // waku & draw
-  TH1F *waku41 = new TH1F("waku41","",1,10,1000);
-  waku41->SetMinimum(10000);
-  waku41->SetMaximum(1000000000);
-  waku41->GetXaxis()->SetTitle("M_{D} [GeV/c^{2}]");
-  waku41->GetYaxis()->SetTitle("#sigma^{SI}_{DM-N} / #sigma^{SI}_{DM-p}");
-  waku41->GetXaxis()->SetTitleOffset(1.2);
-  waku41->GetYaxis()->SetTitleOffset(1.4);
-  TLegend *legend41 = new TLegend(0.2,0.66,0.32,0.84);
-  legend41->AddEntry(cross_SI,   "^{19}F","l");
-  legend41->AddEntry(cross_SI_Ge,"^{73}Ge","l");
-  legend41->AddEntry(cross_SI_Xe,"^{128}Xe","l");
-  pad41->cd();
-  waku41->Draw("");
-  legend41->Draw("same");
-  cross_SI->SetLineColor(2);
-  cross_SI->Draw("same");
-  cross_SI_Ge->SetLineColor(4);
-  cross_SI_Ge->Draw("same");
-  cross_SI_Xe->SetLineColor(3);
-  cross_SI_Xe->Draw("same");
-
-  TH1F *waku42 = new TH1F("waku42","",1,10,1000);
-  waku42->SetMinimum(0.1);
-  waku42->SetMaximum(1000);
-  waku42->GetXaxis()->SetTitle("M_{D} [GeV/c^{2}]");
-  waku42->GetYaxis()->SetTitle("#sigma^{SD}_{DM-N} / #sigma^{SD}_{DM-p}");
-  waku42->GetXaxis()->SetTitleOffset(1.2);
-  waku42->GetYaxis()->SetTitleOffset(1.4);
-  TLegend *legend42 = new TLegend(0.8,0.12,0.93,0.5);
-  legend42->AddEntry(cross_SD_Li,"^{7}Li","l");
-  legend42->AddEntry(cross_SD   ,"^{19}F","l");
-  legend42->AddEntry(cross_SD_Na,"^{23}Na","l");
-  legend42->AddEntry(cross_SD_Si,"^{29}Si","l");
-  legend42->AddEntry(cross_SD_Ge,"^{73}Ge","l");
-  legend42->AddEntry(cross_SD_I, "^{127}I","l");
-  legend42->AddEntry(cross_SD_Xe,"^{129}Xe","l");
-  legend42->AddEntry(cross_SD_Xe2,"^{131}Xe","l");
-  pad42->cd();
-  waku42->Draw("");
-  legend42->Draw("same");
-  cross_SD->SetLineColor(2);
-  cross_SD->Draw("same");
-  cross_SD_Li->SetLineColor(1);
-  cross_SD_Li->Draw("same");
-  cross_SD_Na->SetLineColor(4);
-  cross_SD_Na->Draw("same");
-  cross_SD_I->SetLineColor(3);
-  cross_SD_I->Draw("same");
-  cross_SD_Ge->SetLineColor(2);
-  cross_SD_Ge->SetLineStyle(2);
-  cross_SD_Ge->Draw("same");
-  cross_SD_Xe->SetLineColor(4);
-  cross_SD_Xe->SetLineStyle(2);
-  cross_SD_Xe->Draw("same");
-  cross_SD_Xe2->SetLineColor(5);
-  cross_SD_Xe2->SetLineStyle(2);
-  cross_SD_Xe2->Draw("same");
-  cross_SD_Si->SetLineColor(1);
-  cross_SD_Si->SetLineStyle(2);
-  cross_SD_Si->Draw("same");
-  cross_SD_W->SetLineColor(3);
-  cross_SD_W->SetLineStyle(2);
-  cross_SD_W->Draw("same");
-	*/
-
-
-
 
   //**********************************************************************
   //** Energy Spectrum *************************************
@@ -318,7 +124,7 @@ void DM( )
   pad56->SetLogy(1);
   pad56->Draw();
 
-  TF1 *spec_SI = new TF1("spec_SI","const5([4],[5],[6],[7])*func_spec_nor(x/const4([4],[5],[6]),[0],[1],[2],[3])*func_FSI_keV(x,[4])*[8]*func_cross_SI([5],[4])",0,200);
+  TF1 *spec_SI = new TF1("spec_SI","const5([4],[5],[6],[7])*func_spec_nor(x/const4([4],[5],[6]),[0],[1],[2],[3])*func_FSI_keV(x,[4])*[8]*func_cross_SI([5],[4])",0,1000);
 
   TF1 *spec_SD = new TF1("spec_SD","const5([4],[5],[6],[7])*func_spec_nor(x/const4([4],[5],[6]),[0],[1],[2],[3])*func_FSD_keV(x,[4])*[8]*func_cross_SD([5],[4],[9])",0,1000);
 
@@ -488,64 +294,6 @@ void DM( )
   TF1* spec_SD_200_F = (TF1*)spec_SD->Clone("spec_SD_200_F");
   spec_SD_200_F->SetParameters( const0, const1[0] ,const2[0] ,const3 , A, 200, v_0, rho, sigma_SD_0, Ja);
 
-
-  // *******SI 7GeV*******
-  /*
-  rho        = 0.3;
-  M_D        = 7; // [GeV/c^2]
-  sigma_SI_0 = 0.000001; //[pb]
-  TF1* spec_SI_7_F = (TF1*)spec_SI->Clone("spec_SI_7_F");
-  TF1* spec_SI_7_Ge = (TF1*)spec_SI->Clone("spec_SI_7_Ge");
-  TF1* spec_SI_7_Xe = (TF1*)spec_SI->Clone("spec_SI_7_Xe");
-  TF1* spec_SI_7_Ge_Jun = (TF1*)spec_SI->Clone("spec_SI_7_Ge_Jun");
-  TF1* spec_SI_7_Ge_Dec = (TF1*)spec_SI->Clone("spec_SI_7_Ge_Dec");
-  spec_SI_7_F->SetParameters( const0, const1[0] ,const2[0] ,const3 , A, M_D, v_0, rho, sigma_SI_0);
-  spec_SI_7_Ge->SetParameters( const0, const1[0] ,const2[0] ,const3 , 73, M_D, v_0, rho, sigma_SI_0);
-  spec_SI_7_Xe->SetParameters( const0, const1[0] ,const2[0] ,const3 , 131, M_D, v_0, rho, sigma_SI_0);
-  spec_SI_7_Ge_Jun->SetParameters( const0, const1[6] ,const2[6] ,const3 , 73, M_D, v_0, rho, sigma_SI_0);
-  spec_SI_7_Ge_Dec->SetParameters( const0, const1[12] ,const2[12] ,const3 , 73, M_D, v_0, rho, sigma_SI_0);
-  */
-
-  // *******SD 7GeV*******
-  /*
-  rho        = 0.3;
-  M_D        = 7; // [GeV/c^2]
-  sigma_SD_0 = 80; //[pb]
-  TF1* spec_SD_7_F = (TF1*)spec_SD->Clone("spec_SD_7_F");
-  TF1* spec_SD_7_Ge = (TF1*)spec_SD->Clone("spec_SD_7_Ge");
-  TF1* spec_SD_7_Xe = (TF1*)spec_SD->Clone("spec_SD_7_Xe");
-  TF1* spec_SD_7_Ge_Jun = (TF1*)spec_SD->Clone("spec_SD_7_Ge_Jun");
-  TF1* spec_SD_7_Ge_Dec = (TF1*)spec_SD->Clone("spec_SD_7_Ge_Dec");
-  spec_SD_7_F->SetParameters( const0, const1[0] ,const2[0] ,const3 , A, M_D, v_0, rho, sigma_SD_0, Ja);
-  spec_SD_7_Ge->SetParameters( const0, const1[0] ,const2[0] ,const3 , 73, M_D, v_0, rho, sigma_SD_0, Ja_Ge);
-  spec_SD_7_Xe->SetParameters( const0, const1[0] ,const2[0] ,const3 , 131, M_D, v_0, rho, sigma_SD_0, Ja_Xe);
-  spec_SD_7_Ge_Jun->SetParameters( const0, const1[6] ,const2[6] ,const3 , 73, M_D, v_0, rho, sigma_SD_0, Ja_Ge);
-  spec_SD_7_Ge_Dec->SetParameters( const0, const1[12] ,const2[12] ,const3 , 73, M_D, v_0, rho, sigma_SD_0, Ja_Ge);
-  */
-
-  /*
-  cout<<"hoge"<<endl;
-  // quenching
-  Double_t fac_que[40], keV_que[40], spec_que[40];
-  Double_t integ50,integ100;
-  ifstream data("quenching.dat");
-  Int_t index=0;
-  while(data >> fac_que[index] >> keV_que[index]){ index++; }
-  data.close();
-  for(Int_t i=0; i<40; i++){
-    spec_que[i]=(spec_SD_100_F->Eval(fac_que[i]));
-    //cout<<i<<" "<<fac_que[i]<<" "<<spec_que[i]<<endl;
-    if(spec_que[i]<0)spec_que[i]=0;
-    if(keV_que[i]>50) integ50+=spec_que[i];
-    if(keV_que[i]>100)integ100+=spec_que[i];
-  }
-  TGraph *graph = new TGraph(40,keV_que,spec_que);
-  graph->SetLineColor(4);
-  graph->SetLineWidth(3);
-  cout<<"50keV:"<<graph->Eval(50)<<" 100keV:"<<graph->Eval(100)<<endl;;
-  cout<<"50-200keV:"<<integ50<<" 100-200keV:"<<integ100<<endl;
-  */
-
   // waku & draw
   TH1F *waku51 = new TH1F("waku51","SI, ^{19}F,  #sigma=1e-6 [pb],  average",1,0,200);
   waku51->SetMinimum(0.000001);
@@ -634,49 +382,6 @@ void DM( )
   leg_spec_SD->Draw();
   //c_spec_SD->Print("c_spec_SD.eps");
 
-
-
-  /*
-  TH1F *waku53 = new TH1F("waku53","SI, M_{D}=7 [GeV],  #sigma=1e-6 [pb],  average",1,0,20);
-  waku53->SetMinimum(0.00001);
-  waku53->SetMaximum(1);
-  waku53->GetXaxis()->SetTitle("recoil energy [keV]");
-  waku53->GetYaxis()->SetTitle("event rate [counts/keV/kg/days]");
-  waku53->GetYaxis()->SetTitleOffset(1.3);
-  TLegend *legend53 = new TLegend(0.6,0.6,0.88,0.88);
-  legend53->AddEntry(spec_SI_7_F, "^{19}F  M_{D}=7GeV","l");
-  legend53->AddEntry(spec_SI_7_Ge,"^{73}Ge  M_{D}=7GeV","l");
-  legend53->AddEntry(spec_SI_7_Xe,"^{131}Xe  M_{D}=7GeV","l");
-  pad53->cd();
-  waku53->Draw("");
-  legend53->Draw("same");
-  spec_SI_7_F->SetLineColor(2);
-  spec_SI_7_F->Draw("same");
-  spec_SI_7_Ge->SetLineColor(3);
-  spec_SI_7_Ge->Draw("same");
-  spec_SI_7_Xe->SetLineColor(4);
-  spec_SI_7_Xe->Draw("same");
-
-  TH1F *waku54 = new TH1F("waku54","SD, M_{D}=7 [GeV],  #sigma=1 [pb],  average",1,0,20);
-  waku54->SetMinimum(1);
-  waku54->SetMaximum(10000);
-  waku54->GetXaxis()->SetTitle("recoil energy [keV]");
-  waku54->GetYaxis()->SetTitle("event rate [counts/keV/kg/days]");
-  waku54->GetYaxis()->SetTitleOffset(1.3);
-  TLegend *legend54 = new TLegend(0.6,0.6,0.88,0.88);
-  legend54->AddEntry(spec_SD_7_F, "^{19}F  M_{D}=7GeV","l");
-  legend54->AddEntry(spec_SD_7_Ge,"^{73}Ge  M_{D}=7GeV","l");
-  legend54->AddEntry(spec_SD_7_Xe,"^{131}Xe  M_{D}=7GeV","l");
-  pad54->cd();
-  waku54->Draw("");
-  legend54->Draw("same");
-  spec_SD_7_F->SetLineColor(2);
-  spec_SD_7_F->Draw("same");
-  spec_SD_7_Ge->SetLineColor(3);
-  spec_SD_7_Ge->Draw("same");
-  spec_SD_7_Xe->SetLineColor(4);
-  spec_SD_7_Xe->Draw("same");
-  */
   TH1F *waku55 = new TH1F("waku55","SI, M_{D}=100 [GeV],  #sigma=1e-6 [pb]",1,0,125);
   waku55->SetMinimum(0.00005);
   waku55->SetMaximum(0.04);
@@ -780,25 +485,6 @@ void DM( )
   spec_SD_100_Xe->SetLineColor(5);
   spec_SD_100_Xe->Draw("same");
 
-  // c51->Print("energy_spectrum_SI.eps");
-  // c52->Print("energy_spectrum_SD.eps");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   //**********************************************************************
@@ -880,46 +566,6 @@ void DM( )
   //  spec_SI_7_Ge_Dec->SetLineColor(4);
   //  spec_SI_7_Ge_Dec->Draw("same");
 
-  /*
-  TH1F *waku62 = new TH1F("waku62","SD, M_{D}=7 [GeV],  #sigma=1 [pb],  annual",1,0,5);
-  waku62->SetMinimum(0.001);
-  waku62->SetMaximum(30);
-  waku62->GetXaxis()->SetTitle("recoil energy [keV]");
-  waku62->GetYaxis()->SetTitle("rate [counts/keV/kg/days]");
-  waku62->GetYaxis()->SetTitleOffset(1.3);
-  pad62->cd();
-  waku62->Draw("");
-  spec_SD_7_Ge->Draw("same");
-  spec_SD_7_Ge_Jun->SetLineColor(2);
-  spec_SD_7_Ge_Jun->Draw("same");
-  spec_SD_7_Ge_Dec->SetLineColor(4);
-  spec_SD_7_Ge_Dec->Draw("same");
-  */
-
-  /*
-  TH1F *waku63 = new TH1F("waku63","SI, ^{73}Ge, M_{D}=7 [GeV],  #sigma=1e-6 [pb],  Jun-Dec",1,0,5);
-  waku63->SetMinimum(0);
-  waku63->SetMaximum(0.01);
-  waku63->GetXaxis()->SetTitle("recoil energy [keV]");
-  waku63->GetYaxis()->SetTitle("rate [counts/keV/kg/days]");
-  waku63->GetYaxis()->SetTitleOffset(1.3);
-  pad63->cd();
-  waku63->Draw("");
-  spec_SI_7_Ge_dif->SetLineColor(3);
-  spec_SI_7_Ge_dif->Draw("same");
-  */
-  /*
-  TH1F *waku64 = new TH1F("waku64","SD, ^{73}Ge, M_{D}=7 [GeV],  #sigma=1 [pb],  Jun-Dec",1,0,5);
-  waku64->SetMinimum(0);
-  waku64->SetMaximum(1);
-  waku64->GetXaxis()->SetTitle("recoil energy [keV]");
-  waku64->GetYaxis()->SetTitle("rate [counts/keV/kg/days]");
-  waku64->GetYaxis()->SetTitleOffset(1.3);
-  pad64->cd();
-  waku64->Draw("");
-  spec_SD_7_Ge_dif->SetLineColor(3);
-  spec_SD_7_Ge_dif->Draw("same");
-  */
 
   TH1F *waku65 = new TH1F("waku65","SD, ^{19}F, M_{D}=100 [GeV],  #sigma=1 [pb]",1,0,200);
   waku65->SetMinimum(0);
@@ -1438,16 +1084,42 @@ void DM( )
   spec_SD_5_F->SetNpx( 1000 );
 
 
+
+
+  TF1* spec_SI_5_Xe = (TF1*)spec_SI_100_Xe->Clone("spec_SI_5_Xe");
+  spec_SI_5_Xe->SetParameters( const0, const1[0] ,const2[0] ,const3 , 132, 5, v_0, rho, sigma_SI_0);
+  spec_SI_5_Xe->SetNpx( 1000 );
+  TF1* spec_SI_10_Xe = (TF1*)spec_SI_100_Xe->Clone("spec_SI_10_Xe");
+  spec_SI_10_Xe->SetParameters( const0, const1[0] ,const2[0] ,const3 , 132, 10, v_0, rho, sigma_SI_0);
+  spec_SI_10_Xe->SetNpx( 1000 );
+  TF1* spec_SI_25_Xe = (TF1*)spec_SI_100_Xe->Clone("spec_SI_25_Xe");
+  spec_SI_25_Xe->SetParameters( const0, const1[0] ,const2[0] ,const3 , 132, 25, v_0, rho, sigma_SI_0);
+  spec_SI_25_Xe->SetNpx( 1000 );
+  TF1* spec_SI_50_Xe = (TF1*)spec_SI_100_Xe->Clone("spec_SI_50_Xe");
+  spec_SI_50_Xe->SetParameters( const0, const1[0] ,const2[0] ,const3 , 132, 50, v_0, rho, sigma_SI_0);
+  spec_SI_50_Xe->SetNpx( 1000 );
+
+  TF1* spec_SI_200_Xe = (TF1*)spec_SI_100_Xe->Clone("spec_SI_200_Xe");
+  spec_SI_200_Xe->SetParameters( const0, const1[0] ,const2[0] ,const3 , 132, 200, v_0, rho, sigma_SI_0);
+  spec_SI_200_Xe->SetNpx( 1000 );
+  TF1* spec_SI_300_Xe = (TF1*)spec_SI_100_Xe->Clone("spec_SI_300_Xe");
+  spec_SI_300_Xe->SetParameters( const0, const1[0] ,const2[0] ,const3 , 132, 300, v_0, rho, sigma_SI_0);
+  spec_SI_300_Xe->SetNpx( 1000 );
+  TF1* spec_SI_400_Xe = (TF1*)spec_SI_100_Xe->Clone("spec_SI_400_Xe");
+  spec_SI_400_Xe->SetParameters( const0, const1[0] ,const2[0] ,const3 , 132, 400, v_0, rho, sigma_SI_0);
+  spec_SI_400_Xe->SetNpx( 1000 );
+
+
   TFile enFile( "energy.root", "RECREATE" );
 
-  TH1F hist_SD_5_F  ( "hist_SD_5_F",   "hist_SD_5_F",   200, 0, 200 );
-  TH1F hist_SD_10_F ( "hist_SD_10_F",  "hist_SD_10_F",  200, 0, 200 );
-  TH1F hist_SD_25_F ( "hist_SD_25_F",  "hist_SD_25_F",  200, 0, 200 );
-  TH1F hist_SD_50_F ( "hist_SD_50_F",  "hist_SD_50_F",  200, 0, 200 );
-  TH1F hist_SD_100_F( "hist_SD_100_F", "hist_SD_100_F", 200, 0, 200 );
-  TH1F hist_SD_200_F( "hist_SD_200_F", "hist_SD_200_F", 200, 0, 200 );
-  TH1F hist_SD_300_F( "hist_SD_300_F", "hist_SD_300_F", 200, 0, 200 );
-  TH1F hist_SD_400_F( "hist_SD_400_F", "hist_SD_400_F", 200, 0, 200 );
+  TH1F hist_SD_5_F  ( "hist_SD_5_F",   "hist_SD_5_F",   1000, 0, 1000 );
+  TH1F hist_SD_10_F ( "hist_SD_10_F",  "hist_SD_10_F",  1000, 0, 1000 );
+  TH1F hist_SD_25_F ( "hist_SD_25_F",  "hist_SD_25_F",  1000, 0, 1000 );
+  TH1F hist_SD_50_F ( "hist_SD_50_F",  "hist_SD_50_F",  1000, 0, 1000 );
+  TH1F hist_SD_100_F( "hist_SD_100_F", "hist_SD_100_F", 1000, 0, 1000 );
+  TH1F hist_SD_200_F( "hist_SD_200_F", "hist_SD_200_F", 1000, 0, 1000 );
+  TH1F hist_SD_300_F( "hist_SD_300_F", "hist_SD_300_F", 1000, 0, 1000 );
+  TH1F hist_SD_400_F( "hist_SD_400_F", "hist_SD_400_F", 1000, 0, 1000 );
   hist_SD_5_F.SetDirectory( &enFile );
   hist_SD_10_F.SetDirectory( &enFile );
   hist_SD_25_F.SetDirectory( &enFile );
@@ -1456,16 +1128,27 @@ void DM( )
   hist_SD_200_F.SetDirectory( &enFile );
   hist_SD_300_F.SetDirectory( &enFile );
   hist_SD_400_F.SetDirectory( &enFile );
-  for( int i = 0; i < 10000000; ++i ) {
-      hist_SD_5_F.Fill( spec_SD_5_F->GetRandom( 0, 200 ) );
-      hist_SD_10_F.Fill( spec_SD_10_F->GetRandom( 0, 200 ) );
-      hist_SD_25_F.Fill( spec_SD_25_F->GetRandom( 0, 200 ) );
-      hist_SD_50_F.Fill( spec_SD_50_F->GetRandom( 0, 200 ) );
-      hist_SD_100_F.Fill( spec_SD_100_F->GetRandom( 0, 200 ) );
-      hist_SD_200_F.Fill( spec_SD_200_F->GetRandom( 0, 200 ) );
-      hist_SD_300_F.Fill( spec_SD_200_F->GetRandom( 0, 200 ) );
-      hist_SD_400_F.Fill( spec_SD_200_F->GetRandom( 0, 200 ) );
+  int nSample = 10000000;
+  for( int i = 0; i < nSample; ++i ) {
+      hist_SD_5_F.Fill( spec_SD_5_F->GetRandom( 0, 1000 ) );
+      hist_SD_10_F.Fill( spec_SD_10_F->GetRandom( 0, 1000 ) );
+      hist_SD_25_F.Fill( spec_SD_25_F->GetRandom( 0, 1000 ) );
+      hist_SD_50_F.Fill( spec_SD_50_F->GetRandom( 0, 1000 ) );
+      hist_SD_100_F.Fill( spec_SD_100_F->GetRandom( 0, 1000 ) );
+      hist_SD_200_F.Fill( spec_SD_200_F->GetRandom( 0, 1000 ) );
+      hist_SD_300_F.Fill( spec_SD_200_F->GetRandom( 0, 1000 ) );
+      hist_SD_400_F.Fill( spec_SD_200_F->GetRandom( 0, 1000 ) );
   }
+
+  hist_SD_5_F.Scale( spec_SD_5_F->Integral( 0, 1000 ) / (double)nSample );
+  hist_SD_10_F.Scale( spec_SD_10_F->Integral( 0, 1000 ) / (double)nSample );
+  hist_SD_25_F.Scale( spec_SD_25_F->Integral( 0, 1000 ) / (double)nSample );
+  hist_SD_50_F.Scale( spec_SD_50_F->Integral( 0, 1000 ) / (double)nSample );
+  hist_SD_100_F.Scale( spec_SD_100_F->Integral( 0, 1000 ) / (double)nSample );
+  hist_SD_200_F.Scale( spec_SD_200_F->Integral( 0, 1000 ) / (double)nSample );
+  hist_SD_300_F.Scale( spec_SD_300_F->Integral( 0, 1000 ) / (double)nSample );
+  hist_SD_400_F.Scale( spec_SD_400_F->Integral( 0, 1000 ) / (double)nSample );
+
   hist_SD_5_F.Write( );
   hist_SD_10_F.Write( );
   hist_SD_25_F.Write( );
@@ -1474,5 +1157,57 @@ void DM( )
   hist_SD_200_F.Write( );
   hist_SD_300_F.Write( );
   hist_SD_400_F.Write( );
+
+
+
+  TH1F hist_SI_5_Xe  ( "hist_SI_5_Xe",   "hist_SI_5_Xe",   1000, 0, 1000 );
+  TH1F hist_SI_10_Xe ( "hist_SI_10_Xe",  "hist_SI_10_Xe",  1000, 0, 1000 );
+  TH1F hist_SI_25_Xe ( "hist_SI_25_Xe",  "hist_SI_25_Xe",  1000, 0, 1000 );
+  TH1F hist_SI_50_Xe ( "hist_SI_50_Xe",  "hist_SI_50_Xe",  1000, 0, 1000 );
+  TH1F hist_SI_100_Xe( "hist_SI_100_Xe", "hist_SI_100_Xe", 1000, 0, 1000 );
+  TH1F hist_SI_200_Xe( "hist_SI_200_Xe", "hist_SI_200_Xe", 1000, 0, 1000 );
+  TH1F hist_SI_300_Xe( "hist_SI_300_Xe", "hist_SI_300_Xe", 1000, 0, 1000 );
+  TH1F hist_SI_400_Xe( "hist_SI_400_Xe", "hist_SI_400_Xe", 1000, 0, 1000 );
+  hist_SI_5_Xe.SetDirectory( &enFile );
+  hist_SI_10_Xe.SetDirectory( &enFile );
+  hist_SI_25_Xe.SetDirectory( &enFile );
+  hist_SI_50_Xe.SetDirectory( &enFile );
+  hist_SI_100_Xe.SetDirectory( &enFile );
+  hist_SI_200_Xe.SetDirectory( &enFile );
+  hist_SI_300_Xe.SetDirectory( &enFile );
+  hist_SI_400_Xe.SetDirectory( &enFile );
+
+  for( int i = 0; i < nSample; ++i ) {
+      hist_SI_5_Xe.Fill( spec_SI_5_Xe->GetRandom( 0, 1000 ) );
+      hist_SI_10_Xe.Fill( spec_SI_10_Xe->GetRandom( 0, 1000 ) );
+      hist_SI_25_Xe.Fill( spec_SI_25_Xe->GetRandom( 0, 1000 ) );
+      hist_SI_50_Xe.Fill( spec_SI_50_Xe->GetRandom( 0, 1000 ) );
+      hist_SI_100_Xe.Fill( spec_SI_100_Xe->GetRandom( 0, 1000 ) );
+      hist_SI_200_Xe.Fill( spec_SI_200_Xe->GetRandom( 0, 1000 ) );
+      hist_SI_300_Xe.Fill( spec_SI_300_Xe->GetRandom( 0, 1000 ) );
+      hist_SI_400_Xe.Fill( spec_SI_400_Xe->GetRandom( 0, 1000 ) );
+  }
+
+  hist_SI_5_Xe.Scale( spec_SI_5_Xe->Integral( 0, 1000 ) / (double)nSample / sigma_SI_0 );  // 1 pb
+  hist_SI_10_Xe.Scale( spec_SI_10_Xe->Integral( 0, 1000 ) / (double)nSample / sigma_SI_0 ); // 1 pb
+  hist_SI_25_Xe.Scale( spec_SI_25_Xe->Integral( 0, 1000 ) / (double)nSample / sigma_SI_0 ); // 1 pb
+  hist_SI_50_Xe.Scale( spec_SI_50_Xe->Integral( 0, 1000 ) / (double)nSample / sigma_SI_0 ); // 1 pb
+  hist_SI_100_Xe.Scale( spec_SI_100_Xe->Integral( 0, 1000 ) / (double)nSample / sigma_SI_0 ); // 1 pb
+  hist_SI_200_Xe.Scale( spec_SI_200_Xe->Integral( 0, 1000 ) / (double)nSample / sigma_SI_0 ); // 1 pb
+  hist_SI_300_Xe.Scale( spec_SI_300_Xe->Integral( 0, 1000 ) / (double)nSample / sigma_SI_0 ); // 1 pb
+  hist_SI_400_Xe.Scale( spec_SI_400_Xe->Integral( 0, 1000 ) / (double)nSample / sigma_SI_0 ); // 1 pb
+
+  hist_SI_5_Xe.Write( );
+  hist_SI_10_Xe.Write( );
+  hist_SI_25_Xe.Write( );
+  hist_SI_50_Xe.Write( );
+  hist_SI_100_Xe.Write( );
+  hist_SI_200_Xe.Write( );
+  hist_SI_300_Xe.Write( );
+  hist_SI_400_Xe.Write( );
+
+
   enFile.Close( );
+
+
 }
