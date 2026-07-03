@@ -142,6 +142,80 @@ double getDMFluxEn( double* x,
     return flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
 }
 
+// energy component (ES by vector boson mediator)
+
+
+double getDMFluxEnVBES( double dmE,
+                        double g_DM_V,
+                        double g_p_V,
+                        double g_n_V,
+                        double A,
+                        double Z,
+                        double VM,
+                        double NM,
+                        double dmM,
+                        double lambdaP )
+{
+    // if( pM < 0.0 || dmE < 0.0 || dmM < 0.0 || dmXS < 0.0 ) return 0.0;
+
+    double retVal = 0.0;
+    int intGranurality = 10;
+    for( int i = 0; i < intGranurality; ++i ) { // cos integration
+
+        double kappa = sqrt( dmE / (2.0 * dmM + dmE ) );
+
+        // bin width
+        double binWidth = ( 1.0 - kappa ) / static_cast< double >( intGranurality );
+        
+        double cos_theta_DM = kappa + binWidth*( static_cast< double >( i ) + 0.5 );
+
+        double E_A_star = ( kappa*kappa*dmM + cos_theta_DM*sqrt( kappa*kappa*dmM*dmM + ( cos_theta_DM*cos_theta_DM - kappa*kappa) * NM*NM ) ) / ( cos_theta_DM*cos_theta_DM - kappa*kappa );
+        double g_A_V = Z*g_p_V + (A - Z)*g_n_V;
+        double xsecPart = g_DM_V*g_DM_V*g_A_V*g_A_V / ( 4.0* TMath::Pi( )*TMath::Pi( ) ) * dmM*E_A_star*E_A_star / (VM*VM*VM*VM*( E_A_star*E_A_star - NM*NM ));
+
+        double formFactor = 1.0 / pow( 1.0 + (2.0 * dmM * dmE) / (lambdaP*lambdaP), 2 ); // need to fix
+    
+        double p_A_star = sqrt( E_A_star*E_A_star - NM*NM );
+        double partA = ( E_A_star*E_A_star*p_A_star*p_A_star*( E_A_star + dmM ) ) / ( cos_theta_DM * ( E_A_star*dmM + NM*NM ) );
+
+        double partB = 1.0 / ( 1.0 + 2.0*dmM*dmE/VM/VM )*( 1.0 + 2.0*dmM*dmE/VM/VM );
+
+        double partC = 1.0 - ( dmM*dmM + NM*NM + 2.0*NM*( dmM + dmE ) - dmM*dmE )*dmE / ( 2.0*dmM*E_A_star*E_A_star );
+
+        double Tstar = E_A_star - NM;
+
+        double cosmicFlux_Tstar = getDiffFlux( Tstar );
+
+        double integrandFunc = xsecPart * formFactor * formFactor * partA * partB * partC * cosmicFlux_Tstar;
+
+        retVal += integrandFunc * binWidth;
+    }
+    
+    DEBUG(retVal)
+    return retVal;
+}
+
+double getDMFluxEnVBES( double* x,
+                        double* par )
+{
+    double velo     = x[0];
+    double g_DM_V   = par[0];
+    double g_p_V    = par[1];
+    double g_n_V    = par[2];
+    double A        = par[3];
+    double Z        = par[4];
+    double VM       = par[5];
+    double NM       = par[6];
+    double dmM      = par[7];
+    double lambdaP  = par[8];
+
+    double gamma    = 1.0 / sqrt( 1 - pow( velo / V_LIGHT , 2) );
+    double dmE      = dmM * (gamma - 1.0);
+    
+    double flux = getDMFluxEnVBES( dmE, g_DM_V, g_p_V, g_n_V, A, Z, VM, NM, dmM, lambdaP );
+    return flux * dmM * dmM * gamma * gamma * gamma; // Note!!: the local dark matter density is ignored at this stage... 
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -254,6 +328,8 @@ double getDMNFWFlux( double theta,
     return fluxDir * fluxEn; // /cm^2/GeV/s/sr
 }
 
+
+
 double getDMNFWFlux( double* x,
                      double* par )
 {
@@ -289,6 +365,82 @@ double getDMNFWFluxInt( double* x,
 
     return getDMNFWFlux( theta, phi, los, pM, dmE, dmM, dmXS, dmDScale, dmRScale, sunDist, lambdaP );
 }
+
+
+double getDMNFWFluxVBES( double theta,
+                         double phi,
+                         double los,
+                         double dmDScale, // GeV/cm^3
+                         double dmRScale, // kpc
+                         double sunDist,
+                         double dmE,
+                         double g_DM_V,
+                         double g_p_V,
+                         double g_n_V,
+                         double A,
+                         double Z,
+                         double VM,
+                         double NM,
+                         double dmM,
+                         double lambdaP )
+{
+    // if( pM < 0.0 || dmE < 0.0 || dmM < 0.0 || dmXS < 0.0 || dmDScale < 0.0 || dmRScale < 0.0 || sunDist < 0.0 )
+
+    double fluxDir = getDMNFWFluxDirInt( theta, phi, los, dmDScale, dmRScale, sunDist ); // GeV/cm^2
+    double fluxEn  = getDMFluxEnVBES( dmE, g_DM_V, g_p_V, g_n_V, A, Z, VM, NM, dmM, lambdaP );
+    if( fluxDir < 0 ) DEBUG("errorDir");
+    if( fluxEn < 0 ) DEBUG("errorEn");
+
+    return fluxDir * fluxEn; // /cm^2/GeV/s/sr
+}
+
+double getDMNFWFluxVBES( double* x,
+                         double* par )
+{
+    double theta    = x[0];
+    double phi      = x[1];
+    double los      = x[2];
+    double dmE      = par[0];
+    double dmDScale = par[1];
+    double dmRScale = par[2];
+    double sunDist  = par[3];
+    double g_DM_V   = par[4];
+    double g_p_V    = par[5];
+    double g_n_V    = par[6];
+    double A        = par[7];
+    double Z        = par[8];
+    double VM       = par[9];
+    double NM       = par[10];
+    double dmM      = par[11];
+    double lambdaP  = par[12];
+
+    return getDMNFWFluxVBES( theta, phi, los, dmDScale, dmRScale, sunDist, dmE, g_DM_V, g_p_V, g_n_V, A, Z, VM, NM, dmM, lambdaP );
+}
+
+
+double getDMNFWFluxIntVBES( double* x,
+                            double* par )
+{
+    double theta    = x[0];
+    double phi      = x[1];
+    double dmE      = x[2];
+    double los      = par[0];
+    double dmDScale = par[1];
+    double dmRScale = par[2];
+    double sunDist  = par[3];
+    double g_DM_V   = par[4];
+    double g_p_V    = par[5];
+    double g_n_V    = par[6];
+    double A        = par[7];
+    double Z        = par[8];
+    double VM       = par[9];
+    double NM       = par[10];
+    double dmM      = par[11];
+    double lambdaP  = par[12];
+
+    return getDMNFWFluxVBES( theta, phi, los, dmDScale, dmRScale, sunDist, dmE, g_DM_V, g_p_V, g_n_V, A, Z, VM, NM, dmM, lambdaP );
+}
+
 
 double getDMNFWFluxV( double* x,
                       double* par )

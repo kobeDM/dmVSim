@@ -65,6 +65,20 @@ double getDMFluxEn( double pM,
 double getDMFluxEn( double* x,
                     double* par );
 
+double getDMFluxEnVBES( double dmE,
+                        double g_DM_V,
+                        double g_p_V,
+                        double g_n_V,
+                        double A,
+                        double Z,
+                        double VM,
+                        double NM,
+                        double dmM,
+                        double lambdaP );
+double getDMFluxEnVBES( double* x,
+                        double* par );
+
+
 double getDMNFWFluxDir( double theta,
                         double phi,
                         double los,
@@ -104,6 +118,29 @@ double getDMNFWFluxInt ( double* x,
                          double* par );
 double getDMNFWFluxV   ( double* x,
                          double* par );
+
+
+double getDMNFWFluxVBES( double theta,
+                         double phi,
+                         double los,
+                         double dmDScale, // GeV/cm^3
+                         double dmRScale, // kpc
+                         double sunDist,
+                         double dmE,
+                         double g_DM_V,
+                         double g_p_V,
+                         double g_n_V,
+                         double A,
+                         double Z,
+                         double VM,
+                         double NM,
+                         double dmM,
+                         double lambdaP );
+double getDMNFWFluxVBES( double* x,
+                         double* par );
+double getDMNFWFluxIntVBES( double* x,
+                            double* par );
+
 
 
 double getDMIsoThermalFluxDir( double theta,
